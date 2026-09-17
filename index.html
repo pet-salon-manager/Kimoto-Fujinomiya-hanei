@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b7a5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ふじのみや旅ナビ">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <title>ふじのみや旅ナビ</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
@@ -13,26 +17,17 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:#173d33;color:var(--ink);min-height:100vh;position:relative}
+body::before{content:"";position:fixed;z-index:-2;inset:0;background:url("./fujinomiya-bg.jpg") center center / cover no-repeat;transform:translateZ(0)}
+body::after{content:"";position:fixed;z-index:-1;inset:0;background:linear-gradient(180deg,rgba(5,38,50,.16),rgba(10,46,36,.30) 52%,rgba(6,38,30,.46))}
 button,input{font:inherit}
 .hero{
   min-height:350px;color:#fff;position:relative;overflow:hidden;padding:24px 18px 34px;
-  background:
-    radial-gradient(circle at 72% 18%,rgba(255,255,255,.92) 0 34px,transparent 35px),
-    linear-gradient(160deg,rgba(20,128,102,.1),rgba(5,50,43,.7)),
-    linear-gradient(180deg,#64b4d7 0 48%,#a7d6cc 48% 65%,#0f7d5d 65%);
+  background:linear-gradient(180deg,rgba(0,32,46,.04),rgba(0,28,35,.24));
+  border-bottom:1px solid rgba(255,255,255,.24)
 }
-.hero:before{
-  content:"";position:absolute;left:50%;top:84px;width:310px;height:200px;transform:translateX(-50%);
-  background:linear-gradient(145deg,transparent 49%,rgba(255,255,255,.98) 50% 66%,transparent 67%),
-             linear-gradient(215deg,transparent 49%,rgba(255,255,255,.98) 50% 66%,transparent 67%);
-  clip-path:polygon(50% 0,100% 100%,0 100%);
-  opacity:.95
-}
-.hero:after{
-  content:"";position:absolute;left:-10%;right:-10%;bottom:-80px;height:180px;border-radius:50% 50% 0 0;
-  background:#0f7d5d;transform:rotate(-2deg)
-}
+.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.16),transparent 58%);pointer-events:none}
+.hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.20));pointer-events:none}
 .hero-inner{position:relative;z-index:2;max-width:980px;margin:auto}
 .brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.04em}
 .logo{width:42px;height:42px;background:#fff;border-radius:14px;display:grid;place-items:center;box-shadow:0 8px 25px #0002}
@@ -40,7 +35,7 @@ button,input{font:inherit}
 h1{font-size:clamp(32px,8vw,56px);line-height:1.05;margin:56px 0 12px;letter-spacing:.02em;text-shadow:0 3px 18px #1248}
 .lead{max-width:650px;font-weight:700;font-size:17px;line-height:1.8;text-shadow:0 2px 10px #1247}
 main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding:0 16px}
-.toolbar{background:#fff;border:1px solid var(--line);border-radius:26px;padding:16px;box-shadow:0 16px 40px #103a2e18}
+.toolbar{background:rgba(255,255,255,.90);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.64);border-radius:26px;padding:16px;box-shadow:0 16px 40px #103a2e2e}
 .search-wrap{display:flex;gap:10px}
 .search{flex:1;border:1px solid var(--line);background:#f8fbf9;border-radius:16px;padding:14px 16px;outline:none}
 .search:focus{border-color:#87bbaa;box-shadow:0 0 0 4px #0b7a5c14}
@@ -50,10 +45,10 @@ main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding
 .chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;color:#48625a;cursor:pointer}
 .chip.active{background:var(--green);color:#fff;border-color:var(--green)}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 2px 14px}
-.section-head h2{margin:0;font-size:24px}
-.count{color:var(--muted);font-size:14px;font-weight:700}
+.section-head h2{margin:0;font-size:24px;color:#fff;text-shadow:0 2px 12px #0008}
+.count{color:#fff;font-size:14px;font-weight:800;text-shadow:0 2px 8px #0008}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 7px 22px #103a2e0a;display:flex;flex-direction:column}
+.card{background:rgba(255,255,255,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.72);border-radius:var(--radius);overflow:hidden;box-shadow:0 12px 34px #0b2b2440;display:flex;flex-direction:column}
 .visual{height:126px;position:relative;display:flex;align-items:flex-end;padding:14px;color:#fff;overflow:hidden}
 .visual:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 10%,#0005 100%)}
 .visual span{position:relative;font-size:32px}
@@ -62,7 +57,7 @@ main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding
 .card h3{font-size:19px;margin:0;line-height:1.4}
 .addr{font-size:13px;color:var(--muted);line-height:1.6}
 .desc{font-size:14px;line-height:1.7;color:#3f554e;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.actions{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px;margin-top:auto}
+.actions{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(70px,.7fr) 44px;gap:8px;margin-top:auto}
 .btn{border:0;border-radius:13px;padding:10px 8px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none}
 .btn.primary{background:var(--green);color:#fff}
 .btn.secondary{background:#eef4f1;color:#284a40}
@@ -76,8 +71,8 @@ dialog::backdrop{background:#102b2588;backdrop-filter:blur(3px)}
 .modal-body{padding:22px}
 .modal-body p{line-height:1.8}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.note{margin-top:26px;padding:16px;border-radius:18px;background:#fff8e8;color:#735611;font-size:13px;line-height:1.7;border:1px solid #f3dfab}
-footer{max-width:1100px;margin:30px auto;padding:0 18px 40px;color:#71857d;font-size:12px;line-height:1.7}
+.note{margin-top:26px;padding:16px;border-radius:18px;background:rgba(255,248,232,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#735611;font-size:13px;line-height:1.7;border:1px solid rgba(243,223,171,.9)}
+footer{max-width:1100px;margin:30px auto;padding:0 18px 40px;color:#fff;font-size:12px;line-height:1.7;text-shadow:0 2px 8px #0008}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:#123b31;color:#fff;padding:11px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:20;font-weight:800}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:820px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -85,7 +80,7 @@ footer{max-width:1100px;margin:30px auto;padding:0 18px 40px;color:#71857d;font-
   .hero{min-height:330px}.hero:before{top:100px;width:250px;height:160px}
   h1{margin-top:54px}.lead{font-size:15px}
   main{padding:0 12px}.grid{grid-template-columns:1fr}.search-wrap{display:grid;grid-template-columns:1fr}
-  .locate{padding:12px}.visual{height:112px}.actions{grid-template-columns:1fr 1fr 46px}
+  .locate{padding:12px}.visual{height:112px}.actions{grid-template-columns:minmax(0,1.55fr) minmax(70px,.7fr) 46px}
 }
 </style>
 </head>
@@ -128,21 +123,6 @@ footer{max-width:1100px;margin:30px auto;padding:0 18px 40px;color:#71857d;font-
   スマートフォンでは「ホーム画面に追加」でアプリのように使えます。地図・経路ボタンは端末の地図サービスへ移動します。
 </footer>
 
-<dialog id="detailDialog">
-  <div id="modalHead" class="modal-head">
-    <button class="close" id="closeDialog" aria-label="閉じる">×</button>
-    <div id="modalBadge" class="badge"></div>
-    <h3 id="modalTitle"></h3>
-  </div>
-  <div class="modal-body">
-    <div id="modalAddress" class="addr"></div>
-    <p id="modalFeature"></p>
-    <div class="modal-actions">
-      <a id="modalMap" class="btn primary" target="_blank" rel="noopener">地図で見る</a>
-      <a id="modalRoute" class="btn secondary" target="_blank" rel="noopener">現在地から行く</a>
-    </div>
-  </div>
-</dialog>
 
 <div id="toast" class="toast"></div>
 
@@ -229,15 +209,13 @@ function render(){
         <div class="addr">📍 ${escapeHtml(s.address)}</div>
         <div class="desc">${escapeHtml(s.feature)}</div>
         <div class="actions">
-          <button class="btn primary" data-detail="${escapeHtml(s.name)}">詳しく見る</button>
+          <a class="btn primary" href="${routeUrl(s)}" target="_blank" rel="noopener">📍 現在地からの行き方</a>
           <a class="btn secondary" href="${mapUrl(s)}" target="_blank" rel="noopener">地図</a>
           <button class="btn fav" data-fav="${escapeHtml(s.name)}" aria-label="お気に入り">${fav?"★":"☆"}</button>
         </div>
       </div>
     </article>`;
   }).join("");
-
-  grid.querySelectorAll("[data-detail]").forEach(b=>b.onclick=()=>openDetail(b.dataset.detail));
   grid.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{
     const name=b.dataset.fav;
     if(favorites.has(name)){favorites.delete(name);toast("お気に入りから外しました");}
@@ -245,24 +223,7 @@ function render(){
     saveFavorites(); render();
   });
 }
-function openDetail(name){
-  const s=SPOTS.find(x=>x.name===name); if(!s)return;
-  const [c1,c2]=palette(s.genre);
-  document.getElementById("modalHead").style.background=`linear-gradient(135deg,${c1},${c2})`;
-  document.getElementById("modalBadge").textContent=s.genre;
-  document.getElementById("modalTitle").textContent=s.name;
-  document.getElementById("modalAddress").textContent=`📍 ${s.address}`;
-  document.getElementById("modalFeature").textContent=s.feature;
-  document.getElementById("modalMap").href=mapUrl(s);
-  document.getElementById("modalRoute").href=routeUrl(s);
-  document.getElementById("detailDialog").showModal();
-}
-
 document.getElementById("search").addEventListener("input",render);
-document.getElementById("closeDialog").onclick=()=>document.getElementById("detailDialog").close();
-document.getElementById("detailDialog").addEventListener("click",(e)=>{
-  if(e.target===document.getElementById("detailDialog")) e.target.close();
-});
 document.getElementById("locationBtn").onclick=()=>{
   if(!navigator.geolocation){toast("この端末では位置情報を利用できません");return;}
   navigator.geolocation.getCurrentPosition(
