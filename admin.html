@@ -119,31 +119,99 @@ function msg(t){$("formMsg").textContent=t||""}
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
-async function geocodeAddress(address){
-  const q=(address||"").trim();
+function normalizeJapaneseAddress(value){
+  return String(value||"")
+    .normalize("NFKC")
+    .replace(/[‐‑‒–—―−ーｰ]/g,"-")
+    .replace(/\s+/g,"")
+    .trim();
+}
+
+async function geocodeByGSI(query){
+  const q=normalizeJapaneseAddress(query);
   if(!q) return null;
 
-  const url = new URL("https://nominatim.openstreetmap.org/search");
+  const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q);
+  const res=await fetch(url,{headers:{"Accept":"application/json"}});
+  if(!res.ok) throw new Error("国土地理院の住所検索に接続できませんでした");
+
+  const rows=await res.json();
+  if(!Array.isArray(rows) || !rows.length) return null;
+
+  const coords=rows[0]?.geometry?.coordinates;
+  if(!Array.isArray(coords) || coords.length<2) return null;
+
+  const lng=Number(coords[0]);
+  const lat=Number(coords[1]);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return {
+    lat,
+    lng,
+    source:"国土地理院",
+    display_name:rows[0]?.properties?.title || q
+  };
+}
+
+async function geocodeByNominatim(query){
+  const q=String(query||"").trim();
+  if(!q) return null;
+
+  const url=new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format","jsonv2");
   url.searchParams.set("limit","1");
   url.searchParams.set("countrycodes","jp");
   url.searchParams.set("accept-language","ja");
   url.searchParams.set("q",q);
 
-  const res = await fetch(url.toString(), {headers:{"Accept":"application/json"}});
-  if(!res.ok) throw new Error("位置情報検索に失敗しました");
-  const data = await res.json();
-  if(!Array.isArray(data) || !data.length) return null;
+  const res=await fetch(url.toString(),{headers:{"Accept":"application/json"}});
+  if(!res.ok) return null;
 
-  const lat = Number(data[0].lat);
-  const lng = Number(data[0].lon);
+  const rows=await res.json();
+  if(!Array.isArray(rows) || !rows.length) return null;
+
+  const lat=Number(rows[0].lat);
+  const lng=Number(rows[0].lon);
   if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
-  return {lat,lng,display_name:data[0].display_name||""};
+  return {
+    lat,
+    lng,
+    source:"OpenStreetMap",
+    display_name:rows[0].display_name||q
+  };
+}
+
+async function geocodeAddress(address,name=""){
+  const normalized=normalizeJapaneseAddress(address);
+  if(!normalized) return null;
+
+  // 1. 日本住所に強い国土地理院を最優先
+  try{
+    const gsi=await geocodeByGSI(normalized);
+    if(gsi) return gsi;
+  }catch(e){}
+
+  // 2. スポット名＋住所で再検索
+  if(name){
+    try{
+      const withName=await geocodeByNominatim(`${name} ${address}`);
+      if(withName) return withName;
+    }catch(e){}
+  }
+
+  // 3. 住所だけで最後の検索
+  try{
+    return await geocodeByNominatim(address);
+  }catch(e){
+    return null;
+  }
 }
 
 async function geocodeCurrentAddress({silent=false}={}){
   const address=$("address").value.trim();
+  const name=$("name").value.trim();
+
   if(!address){
     if(!silent) msg("住所を入力してください");
     return null;
@@ -151,34 +219,32 @@ async function geocodeCurrentAddress({silent=false}={}){
 
   if(!silent) msg("住所から緯度経度を取得中…");
 
-  try{
-    const r=await geocodeAddress(address);
-    if(!r){
-      if(!silent) msg("住所から位置を特定できませんでした。住所を詳しく入力するか、緯度経度を手入力してください。");
-      return null;
-    }
-    $("lat").value=r.lat.toFixed(7);
-    $("lng").value=r.lng.toFixed(7);
-    if(!silent) msg("緯度経度を取得しました");
-    return r;
-  }catch(e){
-    if(!silent) msg("緯度経度を取得できませんでした: "+e.message);
+  const result=await geocodeAddress(address,name);
+
+  if(!result){
+    if(!silent) msg("住所から位置を特定できませんでした。番地まで正確に入力するか、緯度経度を手入力してください。");
     return null;
   }
+
+  $("lat").value=result.lat.toFixed(7);
+  $("lng").value=result.lng.toFixed(7);
+
+  if(!silent) msg(`${result.source}から緯度経度を取得しました`);
+  return result;
 }
 function clearForm(){
- $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("area").value="";
+ $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("address").dataset.original="";$("area").value="";
  $("phone").value="";$("homepage").value="";$("description").value="";$("imageUrl").value="";
- $("imageFile").value="";$("lat").value="";$("lng").value="";$("sortOrder").value=(allSpots.length+1);
+ $("imageFile").value="";$("lat").value="";$("lng").value="";$("lat").dataset.original="";$("lng").dataset.original="";$("sortOrder").value=(allSpots.length+1);
  $("active").checked=true;$("preview").style.display="none";$("preview").src="";
  $("deleteBtn").classList.add("hidden");$("editorTitle").textContent="スポットを追加";msg("");
 }
 function openNew(){clearForm();$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
 function openEdit(id){
  const s=allSpots.find(x=>String(x.id)===String(id)); if(!s)return;
- $("spotId").value=s.id;$("name").value=s.name||"";$("genre").value=s.genre||"";$("address").value=s.address||"";$("area").value=s.area||"";
+ $("spotId").value=s.id;$("name").value=s.name||"";$("genre").value=s.genre||"";$("address").value=s.address||"";$("address").dataset.original=s.address||"";$("area").value=s.area||"";
  $("phone").value=s.phone||"";$("homepage").value=s.homepage||"";$("description").value=s.description||"";$("imageUrl").value=s.image_url||"";
- $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
+ $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("lat").dataset.original=s.lat??"";$("lng").dataset.original=s.lng??"";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
  if(s.image_url){$("preview").src=s.image_url;$("preview").style.display="block"}else{$("preview").style.display="none"}
  $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent="スポットを編集";$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -204,10 +270,26 @@ async function save(){
    const file=$("imageFile").files[0];
    if(file) imageUrl=await SpotStore.uploadImage(file,imageUrl);
 
-   // 住所が入力されていて、緯度経度が空欄なら保存時に自動取得
-   if($("address").value.trim() && (!$("lat").value || !$("lng").value)){
+   // 住所が新規登録・変更された場合は自動で再取得。
+   // 緯度経度を手入力で変更した場合は手入力を優先。
+   const addressNow=$("address").value.trim();
+   const addressBefore=($("address").dataset.original||"").trim();
+   const addressChanged=addressNow!==addressBefore;
+   const coordsBlank=!$("lat").value || !$("lng").value;
+   const coordsManuallyChanged=
+     String($("lat").value)!==String($("lat").dataset.original||"") ||
+     String($("lng").value)!==String($("lng").dataset.original||"");
+
+   if(addressNow && !coordsManuallyChanged && (addressChanged || coordsBlank)){
      msg("住所から緯度経度を自動取得中…");
-     await geocodeCurrentAddress({silent:true});
+     const geo=await geocodeCurrentAddress({silent:true});
+
+     // 住所が変わったのに取得できなかった場合、古い座標は残さない
+     if(addressChanged && !geo){
+       $("lat").value="";
+       $("lng").value="";
+       msg("住所は保存しますが、緯度経度を特定できませんでした。必要なら手入力してください。");
+     }
    }
 
    const spot={
@@ -277,7 +359,7 @@ $("bulkGeocodeBtn").onclick=async()=>{
       $("bulkGeocodeBtn").textContent=`取得中 ${i+1}/${allSpots.length}`;
 
       try{
-        const r=await geocodeAddress(s.address);
+        const r=await geocodeAddress(s.address,s.name);
         if(r){
           await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});
           ok++;
@@ -289,7 +371,7 @@ $("bulkGeocodeBtn").onclick=async()=>{
       }
 
       // 公開ジオコーディングサービスへの連続アクセスを避ける
-      await sleep(1200);
+      await sleep(700);
     }
 
     await reload();
