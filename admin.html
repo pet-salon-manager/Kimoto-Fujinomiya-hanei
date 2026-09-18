@@ -50,6 +50,7 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
       <div class="row">
         <button id="newBtn" class="primary">＋ 新しいスポットを追加</button>
         <button id="seedBtn" class="secondary hidden">初期35件をクラウドへ登録</button>
+        <button id="bulkGeocodeBtn" class="secondary">住所から緯度経度を一括取得</button>
         <button id="resetLocalBtn" class="secondary hidden">初期35件に戻す</button>
         <input id="listSearch" class="grow" type="search" placeholder="登録済みスポットを検索">
       </div>
@@ -82,9 +83,13 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
         </div>
       </div>
       <div class="grid3" style="margin-top:12px">
-        <div><label>緯度</label><input id="lat" type="number" step="any" placeholder="35.0000"></div>
-        <div><label>経度</label><input id="lng" type="number" step="any" placeholder="138.0000"></div>
+        <div><label>緯度</label><input id="lat" type="number" step="any" placeholder="住所から自動取得"></div>
+        <div><label>経度</label><input id="lng" type="number" step="any" placeholder="住所から自動取得"></div>
         <div><label>表示順</label><input id="sortOrder" type="number" step="1" min="0"></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="geocodeBtn" class="secondary" type="button">住所から緯度経度を取得</button>
+        <span class="small">保存時にも自動取得します。緯度経度を手入力した場合は手入力を優先します。</span>
       </div>
       <div style="margin-top:12px"><label><input id="active" type="checkbox" checked style="width:auto;margin-right:6px">公開する</label></div>
       <div class="form-actions">
@@ -111,6 +116,56 @@ let allSpots=[];
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function msg(t){$("formMsg").textContent=t||""}
+
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+async function geocodeAddress(address){
+  const q=(address||"").trim();
+  if(!q) return null;
+
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("format","jsonv2");
+  url.searchParams.set("limit","1");
+  url.searchParams.set("countrycodes","jp");
+  url.searchParams.set("accept-language","ja");
+  url.searchParams.set("q",q);
+
+  const res = await fetch(url.toString(), {headers:{"Accept":"application/json"}});
+  if(!res.ok) throw new Error("位置情報検索に失敗しました");
+  const data = await res.json();
+  if(!Array.isArray(data) || !data.length) return null;
+
+  const lat = Number(data[0].lat);
+  const lng = Number(data[0].lon);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return {lat,lng,display_name:data[0].display_name||""};
+}
+
+async function geocodeCurrentAddress({silent=false}={}){
+  const address=$("address").value.trim();
+  if(!address){
+    if(!silent) msg("住所を入力してください");
+    return null;
+  }
+
+  if(!silent) msg("住所から緯度経度を取得中…");
+
+  try{
+    const r=await geocodeAddress(address);
+    if(!r){
+      if(!silent) msg("住所から位置を特定できませんでした。住所を詳しく入力するか、緯度経度を手入力してください。");
+      return null;
+    }
+    $("lat").value=r.lat.toFixed(7);
+    $("lng").value=r.lng.toFixed(7);
+    if(!silent) msg("緯度経度を取得しました");
+    return r;
+  }catch(e){
+    if(!silent) msg("緯度経度を取得できませんでした: "+e.message);
+    return null;
+  }
+}
 function clearForm(){
  $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("area").value="";
  $("phone").value="";$("homepage").value="";$("description").value="";$("imageUrl").value="";
@@ -148,6 +203,13 @@ async function save(){
    let imageUrl=$("imageUrl").value.trim();
    const file=$("imageFile").files[0];
    if(file) imageUrl=await SpotStore.uploadImage(file,imageUrl);
+
+   // 住所が入力されていて、緯度経度が空欄なら保存時に自動取得
+   if($("address").value.trim() && (!$("lat").value || !$("lng").value)){
+     msg("住所から緯度経度を自動取得中…");
+     await geocodeCurrentAddress({silent:true});
+   }
+
    const spot={
      id:$("spotId").value||("local-"+Date.now()),
      name:$("name").value.trim(),genre:$("genre").value.trim(),address:$("address").value.trim(),area:$("area").value.trim(),
@@ -193,6 +255,51 @@ $("newBtn").onclick=openNew;$("cancelBtn").onclick=()=>{$("editor").classList.re
 $("listSearch").addEventListener("input",renderList);
 $("imageUrl").addEventListener("input",()=>{const v=$("imageUrl").value.trim();if(v){$("preview").src=v;$("preview").style.display="block"}else $("preview").style.display="none"});
 $("imageFile").addEventListener("change",()=>{const f=$("imageFile").files[0];if(f){$("preview").src=URL.createObjectURL(f);$("preview").style.display="block"}});
+
+$("geocodeBtn").onclick=()=>geocodeCurrentAddress();
+
+$("bulkGeocodeBtn").onclick=async()=>{
+  if(!allSpots.length) return;
+  if(!confirm("住所が登録済みで、緯度経度が未登録のスポットを順番に取得します。実行しますか？")) return;
+
+  $("bulkGeocodeBtn").disabled=true;
+  let ok=0, ng=0, skipped=0;
+
+  try{
+    for(let i=0;i<allSpots.length;i++){
+      const s=allSpots[i];
+
+      if(!s.address || (s.lat != null && s.lng != null)){
+        skipped++;
+        continue;
+      }
+
+      $("bulkGeocodeBtn").textContent=`取得中 ${i+1}/${allSpots.length}`;
+
+      try{
+        const r=await geocodeAddress(s.address);
+        if(r){
+          await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});
+          ok++;
+        }else{
+          ng++;
+        }
+      }catch(e){
+        ng++;
+      }
+
+      // 公開ジオコーディングサービスへの連続アクセスを避ける
+      await sleep(1200);
+    }
+
+    await reload();
+    alert(`完了しました。\n成功: ${ok}件\n取得できず: ${ng}件\n対象外: ${skipped}件`);
+  }finally{
+    $("bulkGeocodeBtn").disabled=false;
+    $("bulkGeocodeBtn").textContent="住所から緯度経度を一括取得";
+  }
+};
+
 $("resetLocalBtn").onclick=()=>{if(confirm("この端末の編集内容を消して初期35件に戻しますか？")){SpotStore.resetLocal();reload()}};
 $("seedBtn").onclick=async()=>{if(!confirm("初期35件をクラウドDBへ追加しますか？"))return;try{await SpotStore.seedCloud();await reload();alert("登録しました")}catch(e){alert("登録できません: "+e.message)}};
 init();

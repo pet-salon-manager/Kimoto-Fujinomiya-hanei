@@ -41,8 +41,8 @@ main{max-width:1100px;margin:-28px auto 80px;padding:0 16px}
 .card{position:relative;background:rgba(255,255,255,.045);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);border:1px solid rgba(255,255,255,.28);border-radius:22px;overflow:hidden;box-shadow:0 10px 24px rgba(11,43,36,.14);width:92%;margin:0 auto}
 .card-body{padding:14px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.18)}
 .badge{display:inline-flex;align-self:flex-start;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.42);color:var(--green2);font-weight:800;font-size:11px;border:1px solid rgba(255,255,255,.42)}
-.card h3{font-size:17px;margin:0;line-height:1.35;padding-right:66px}
-.spot-thumb{position:absolute;top:12px;right:12px;width:52px;height:52px;border-radius:14px;object-fit:cover;border:1px solid rgba(255,255,255,.7);box-shadow:0 5px 14px #0002}
+.card h3{font-size:18px;margin:0;line-height:1.35}
+.spot-thumb{width:100%;height:210px;object-fit:cover;border-radius:16px;margin:0 0 10px 0;border:1px solid rgba(255,255,255,.55);box-shadow:0 8px 22px rgba(0,0,0,.16);display:block}
 .addr,.contact{font-size:12px;color:#1f342d;line-height:1.5;font-weight:700}
 .contact{display:flex;flex-wrap:wrap;gap:6px}
 .contact a{color:#0a5f4a;text-decoration:none;background:rgba(255,255,255,.32);padding:4px 7px;border-radius:9px}
@@ -63,7 +63,7 @@ footer a{color:#fff}
 @media(max-width:580px){
  .hero{min-height:310px}h1{margin-top:48px}.lead{font-size:15px}
  main{padding:0 12px}.grid{grid-template-columns:1fr;gap:22px}.search-wrap{display:grid}
- .card{width:88%}.locate{padding:12px}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
+ .card{width:92%}.locate{padding:12px}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
 }
 </style>
 </head>
@@ -106,8 +106,18 @@ const categoryMap=[
 let SPOTS=[],activeCategory="すべて";
 let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaFavorites")||"[]"));
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const mapUrl=s=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${s.address}`)}`;
-const routeUrl=s=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${s.name} ${s.address}`)}&travelmode=driving`;
+const mapUrl=s=>{
+  if(Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng))){
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.lat},${s.lng}`)}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${s.address}`)}`;
+};
+const routeUrl=s=>{
+  const dest=(Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng)))
+    ? `${s.lat},${s.lng}`
+    : `${s.name} ${s.address}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+};
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
 function renderChips(){
  const e=document.getElementById("chips");
@@ -128,7 +138,7 @@ function render(){
    const phone=s.phone?`<a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>`:"";
    const hp=s.homepage?`<a href="${esc(s.homepage)}" target="_blank" rel="noopener">公式HP</a>`:"";
    const img=s.image_url?`<img class="spot-thumb" src="${esc(s.image_url)}" alt="${esc(s.name)}の写真" loading="lazy" onerror="this.style.display='none'">`:"";
-   return `<article class="card">${img}<div class="card-body">
+   return `<article class="card"><div class="card-body">${img}
      <div class="badge">${esc(s.genre||"観光スポット")}</div>
      <h3>${esc(s.name)}</h3>
      <div class="addr">📍 ${esc(s.address)}</div>
