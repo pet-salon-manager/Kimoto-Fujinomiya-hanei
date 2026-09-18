@@ -35,7 +35,7 @@ button,input{font:inherit}
 h1{font-size:clamp(32px,8vw,56px);line-height:1.05;margin:56px 0 12px;letter-spacing:.02em;text-shadow:0 3px 18px #1248}
 .lead{max-width:650px;font-weight:700;font-size:17px;line-height:1.8;text-shadow:0 2px 10px #1247}
 main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding:0 16px}
-.toolbar{background:rgba(255,255,255,.90);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.64);border-radius:26px;padding:16px;box-shadow:0 16px 40px #103a2e2e}
+.toolbar{background:rgba(255,255,255,.68);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border:1px solid rgba(255,255,255,.50);border-radius:26px;padding:16px;box-shadow:0 14px 32px rgba(16,58,46,.18)}
 .search-wrap{display:flex;gap:10px}
 .search{flex:1;border:1px solid var(--line);background:#f8fbf9;border-radius:16px;padding:14px 16px;outline:none}
 .search:focus{border-color:#87bbaa;box-shadow:0 0 0 4px #0b7a5c14}
@@ -48,20 +48,20 @@ main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding
 .section-head h2{margin:0;font-size:24px;color:#fff;text-shadow:0 2px 12px #0008}
 .count{color:#fff;font-size:14px;font-weight:800;text-shadow:0 2px 8px #0008}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.card{background:rgba(255,255,255,.58);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.52);border-radius:var(--radius);overflow:hidden;box-shadow:0 12px 34px rgba(11,43,36,.28);display:flex;flex-direction:column}
-.visual{height:126px;position:relative;display:flex;align-items:flex-end;padding:14px;color:#fff;overflow:hidden;opacity:.94}
-.visual:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 10%,#0005 100%)}
+.card{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.30);border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 24px rgba(11,43,36,.14);display:flex;flex-direction:column}
+.visual{display:none}
+.visual:before{display:none}
 .visual span{position:relative;font-size:32px}
-.card-body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.22))}
-.badge{display:inline-flex;align-self:flex-start;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.58);color:var(--green2);font-weight:800;font-size:12px;border:1px solid rgba(255,255,255,.52)}
+.card-body{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1;background:rgba(255,255,255,.20);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.badge{display:inline-flex;align-self:flex-start;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.42);color:var(--green2);font-weight:800;font-size:12px;border:1px solid rgba(255,255,255,.45)}
 .card h3{font-size:19px;margin:0;line-height:1.4}
-.addr{font-size:13px;color:#334b43;line-height:1.6;font-weight:600}
-.desc{font-size:14px;line-height:1.7;color:#263a34;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.addr{font-size:13px;color:#1f342d;line-height:1.6;font-weight:700}
+.desc{font-size:14px;line-height:1.75;color:#223730;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .actions{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(70px,.7fr) 44px;gap:8px;margin-top:auto}
 .btn{border:0;border-radius:13px;padding:10px 8px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none}
-.btn.primary{background:var(--green);color:#fff}
-.btn.secondary{background:#eef4f1;color:#284a40}
-.btn.fav{font-size:20px;background:#fff3d9;color:#a46b00}
+.btn.primary{background:rgba(11,122,92,.86);color:#fff;border:1px solid rgba(255,255,255,.22)}
+.btn.secondary{background:rgba(255,255,255,.46);color:#284a40;border:1px solid rgba(255,255,255,.40)}
+.btn.fav{font-size:20px;background:rgba(255,243,217,.62);color:#a46b00;border:1px solid rgba(255,255,255,.36)}
 .empty{grid-column:1/-1;text-align:center;padding:50px;background:#fff;border:1px dashed var(--line);border-radius:22px;color:var(--muted)}
 dialog{border:0;border-radius:26px;padding:0;max-width:560px;width:calc(100% - 24px);box-shadow:0 28px 90px #0004}
 dialog::backdrop{background:#102b2588;backdrop-filter:blur(3px)}
@@ -202,7 +202,6 @@ function render(){
     const [c1,c2,icon]=palette(s.genre);
     const fav=favorites.has(s.name);
     return `<article class="card">
-      <div class="visual" style="background:linear-gradient(135deg,${c1},${c2})"><span>${icon}</span></div>
       <div class="card-body">
         <div class="badge">${escapeHtml(s.genre)}</div>
         <h3>${escapeHtml(s.name)}</h3>
