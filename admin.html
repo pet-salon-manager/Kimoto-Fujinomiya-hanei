@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ふじのみや旅ナビ 管理者</title>
+<style>
+:root{--g:#0b7a5c;--ink:#15332b;--bg:#eef4f1;--line:#d8e5df;--danger:#b33a35}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:8;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 16px}
+.wrap{max-width:1100px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.top h1{font-size:20px;margin:0}.status{font-size:12px;font-weight:800;padding:6px 9px;border-radius:999px;background:#e5f4ee;color:#0b6f55}
+main{max-width:1100px;margin:22px auto;padding:0 14px 50px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 8px 26px #173d3310}
+.notice{background:#fff7dc;border-color:#eadca5;color:#6e5614;line-height:1.7;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.grow{flex:1}
+button,.button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.primary{background:var(--g);color:#fff}.secondary{background:#edf4f1;color:#284b40}.danger{background:#fde7e6;color:var(--danger)}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:inherit;background:#fff}
+textarea{min-height:120px;resize:vertical}
+label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.editor{display:none}.editor.show{display:block}
+.spot-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.item{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:15px;padding:9px;background:#fbfdfc}
+.thumb{width:58px;height:58px;border-radius:12px;object-fit:cover;background:#e7efeb;display:grid;place-items:center;font-size:22px}
+.item h3{font-size:14px;margin:0 0 4px}.meta{font-size:11px;color:#687c75;line-height:1.5}
+.item button{padding:8px 10px}.login{max-width:450px;margin:30px auto}
+.preview{max-width:220px;max-height:150px;border-radius:14px;margin-top:8px;display:none}
+.small{font-size:12px;color:#667a73;line-height:1.6}.hidden{display:none!important}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}.spot-list{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row .button,.row button{flex:1}}
+</style>
+</head>
+<body>
+<header><div class="wrap top"><div><h1>観光スポット 管理者画面</h1><div class="small">ふじのみや旅ナビ</div></div><div class="row"><span id="modeBadge" class="status"></span><a class="button secondary" href="./index.html">公開画面</a><button id="logoutBtn" class="secondary hidden">ログアウト</button></div></div></header>
+<main>
+  <section id="localNotice" class="panel notice hidden">
+    現在は「この端末のみ」モードです。ここでの追加・編集・削除は、このブラウザではすぐ公開画面へ反映されます。全利用者へ同じ内容を反映するには、同梱の <b>SUPABASE_SETUP.md</b> に沿ってSupabaseを接続してください。
+  </section>
+
+  <section id="loginPanel" class="panel login hidden">
+    <h2>管理者ログイン</h2>
+    <div style="margin-bottom:10px"><label>メールアドレス</label><input id="loginEmail" type="email" autocomplete="username"></div>
+    <div style="margin-bottom:14px"><label>パスワード</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+    <button id="loginBtn" class="primary" style="width:100%">ログイン</button>
+    <div id="loginMsg" class="small" style="margin-top:10px"></div>
+  </section>
+
+  <div id="adminArea" class="hidden">
+    <section class="panel">
+      <div class="row">
+        <button id="newBtn" class="primary">＋ 新しいスポットを追加</button>
+        <button id="seedBtn" class="secondary hidden">初期35件をクラウドへ登録</button>
+        <button id="resetLocalBtn" class="secondary hidden">初期35件に戻す</button>
+        <input id="listSearch" class="grow" type="search" placeholder="登録済みスポットを検索">
+      </div>
+    </section>
+
+    <section id="editor" class="panel editor">
+      <h2 id="editorTitle">スポットを追加</h2>
+      <input id="spotId" type="hidden">
+      <div class="grid2">
+        <div><label>名称 *</label><input id="name" required></div>
+        <div><label>ジャンル</label><input id="genre" placeholder="自然・名勝"></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>住所</label><input id="address" placeholder="静岡県富士宮市…"></div>
+        <div><label>エリア</label><input id="area" placeholder="市街地・朝霧など"></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div><label>電話番号</label><input id="phone" type="tel" placeholder="0544-00-0000"></div>
+        <div><label>ホームページ</label><input id="homepage" type="url" placeholder="https://..."></div>
+      </div>
+      <div style="margin-top:12px"><label>細かい説明文</label><textarea id="description" placeholder="見どころ、歴史、楽しみ方、注意点など"></textarea></div>
+      <div class="grid2" style="margin-top:12px">
+        <div>
+          <label>写真URL</label><input id="imageUrl" type="url" placeholder="https://...">
+          <div class="small">URLを直接入力するか、下から写真を選択できます。</div>
+        </div>
+        <div>
+          <label>写真を選択</label><input id="imageFile" type="file" accept="image/*">
+          <img id="preview" class="preview" alt="写真プレビュー">
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:12px">
+        <div><label>緯度</label><input id="lat" type="number" step="any" placeholder="35.0000"></div>
+        <div><label>経度</label><input id="lng" type="number" step="any" placeholder="138.0000"></div>
+        <div><label>表示順</label><input id="sortOrder" type="number" step="1" min="0"></div>
+      </div>
+      <div style="margin-top:12px"><label><input id="active" type="checkbox" checked style="width:auto;margin-right:6px">公開する</label></div>
+      <div class="form-actions">
+        <button id="saveBtn" class="primary">保存</button>
+        <button id="cancelBtn" class="secondary">キャンセル</button>
+        <button id="deleteBtn" class="danger hidden">このスポットを削除</button>
+      </div>
+      <div id="formMsg" class="small" style="margin-top:10px"></div>
+    </section>
+
+    <section class="panel">
+      <div class="row"><h2 style="margin:0" class="grow">登録済みスポット</h2><span id="spotCount" class="small"></span></div>
+      <div id="spotList" class="spot-list"></div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./app-config.js"></script>
+<script src="./spots-default.js"></script>
+<script src="./data-store.js"></script>
+<script>
+let allSpots=[];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+function msg(t){$("formMsg").textContent=t||""}
+function clearForm(){
+ $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("area").value="";
+ $("phone").value="";$("homepage").value="";$("description").value="";$("imageUrl").value="";
+ $("imageFile").value="";$("lat").value="";$("lng").value="";$("sortOrder").value=(allSpots.length+1);
+ $("active").checked=true;$("preview").style.display="none";$("preview").src="";
+ $("deleteBtn").classList.add("hidden");$("editorTitle").textContent="スポットを追加";msg("");
+}
+function openNew(){clearForm();$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
+function openEdit(id){
+ const s=allSpots.find(x=>String(x.id)===String(id)); if(!s)return;
+ $("spotId").value=s.id;$("name").value=s.name||"";$("genre").value=s.genre||"";$("address").value=s.address||"";$("area").value=s.area||"";
+ $("phone").value=s.phone||"";$("homepage").value=s.homepage||"";$("description").value=s.description||"";$("imageUrl").value=s.image_url||"";
+ $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
+ if(s.image_url){$("preview").src=s.image_url;$("preview").style.display="block"}else{$("preview").style.display="none"}
+ $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent="スポットを編集";$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function renderList(){
+ const q=$("listSearch").value.trim().toLowerCase();
+ const list=allSpots.filter(s=>!q||`${s.name} ${s.genre} ${s.address} ${s.phone} ${s.homepage} ${s.description}`.toLowerCase().includes(q));
+ $("spotCount").textContent=`${list.length}件`;
+ $("spotList").innerHTML=list.map(s=>`<div class="item">
+   ${s.image_url?`<img class="thumb" src="${esc(s.image_url)}" alt="" onerror="this.outerHTML='<div class=&quot;thumb&quot;>📍</div>'">`:`<div class="thumb">📍</div>`}
+   <div><h3>${esc(s.name)}</h3><div class="meta">${esc(s.genre)}<br>${esc(s.address)}${s.active===false?"<br>非公開":""}</div></div>
+   <button class="secondary" data-edit="${esc(s.id)}">編集</button>
+ </div>`).join("");
+ $("spotList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
+}
+async function reload(){
+ try{allSpots=await SpotStore.list({includeInactive:true});renderList()}catch(e){alert("読み込みエラー: "+e.message)}
+}
+async function save(){
+ if(!$("name").value.trim()){msg("名称を入力してください");return}
+ $("saveBtn").disabled=true;msg("保存中…");
+ try{
+   let imageUrl=$("imageUrl").value.trim();
+   const file=$("imageFile").files[0];
+   if(file) imageUrl=await SpotStore.uploadImage(file,imageUrl);
+   const spot={
+     id:$("spotId").value||("local-"+Date.now()),
+     name:$("name").value.trim(),genre:$("genre").value.trim(),address:$("address").value.trim(),area:$("area").value.trim(),
+     phone:$("phone").value.trim(),homepage:$("homepage").value.trim(),description:$("description").value.trim(),
+     image_url:imageUrl,lat:$("lat").value,lng:$("lng").value,sort_order:$("sortOrder").value,active:$("active").checked
+   };
+   await SpotStore.upsert(spot);msg("保存しました");await reload();setTimeout(()=>{$("editor").classList.remove("show")},500);
+ }catch(e){msg("保存できませんでした: "+e.message)}
+ finally{$("saveBtn").disabled=false}
+}
+async function del(){
+ const id=$("spotId").value;if(!id)return;
+ if(!confirm("この観光スポットを削除しますか？"))return;
+ try{await SpotStore.remove(id);$("editor").classList.remove("show");await reload()}catch(e){msg("削除できませんでした: "+e.message)}
+}
+async function init(){
+ const cloud=SpotStore.cloudConfigured();
+ $("modeBadge").textContent=cloud?"Supabaseクラウド":"この端末のみ";
+ $("localNotice").classList.toggle("hidden",cloud);
+ $("resetLocalBtn").classList.toggle("hidden",cloud);
+ $("seedBtn").classList.toggle("hidden",!cloud);
+
+ if(cloud){
+   const session=await SpotStore.getSession();
+   if(!session){$("loginPanel").classList.remove("hidden");return}
+   try{
+     if(!(await SpotStore.isAdmin())){ $("loginPanel").classList.remove("hidden");$("loginMsg").textContent="このアカウントには管理者権限がありません。";return; }
+   }catch(e){$("loginPanel").classList.remove("hidden");$("loginMsg").textContent=e.message;return}
+   $("logoutBtn").classList.remove("hidden");
+ }
+ $("adminArea").classList.remove("hidden");await reload();
+}
+$("loginBtn").onclick=async()=>{
+ $("loginMsg").textContent="ログイン中…";
+ try{
+   await SpotStore.login($("loginEmail").value.trim(),$("loginPassword").value);
+   if(!(await SpotStore.isAdmin())){await SpotStore.logout();throw new Error("このアカウントには管理者権限がありません")}
+   location.reload();
+ }catch(e){$("loginMsg").textContent="ログインできません: "+e.message}
+};
+$("logoutBtn").onclick=async()=>{await SpotStore.logout();location.reload()};
+$("newBtn").onclick=openNew;$("cancelBtn").onclick=()=>{$("editor").classList.remove("show")};$("saveBtn").onclick=save;$("deleteBtn").onclick=del;
+$("listSearch").addEventListener("input",renderList);
+$("imageUrl").addEventListener("input",()=>{const v=$("imageUrl").value.trim();if(v){$("preview").src=v;$("preview").style.display="block"}else $("preview").style.display="none"});
+$("imageFile").addEventListener("change",()=>{const f=$("imageFile").files[0];if(f){$("preview").src=URL.createObjectURL(f);$("preview").style.display="block"}});
+$("resetLocalBtn").onclick=()=>{if(confirm("この端末の編集内容を消して初期35件に戻しますか？")){SpotStore.resetLocal();reload()}};
+$("seedBtn").onclick=async()=>{if(!confirm("初期35件をクラウドDBへ追加しますか？"))return;try{await SpotStore.seedCloud();await reload();alert("登録しました")}catch(e){alert("登録できません: "+e.message)}};
+init();
+</script>
+</body>
+</html>
