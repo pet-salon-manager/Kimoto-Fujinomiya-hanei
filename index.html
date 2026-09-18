@@ -47,18 +47,18 @@ main{max-width:1100px;margin:-28px auto 80px;position:relative;z-index:4;padding
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 2px 14px}
 .section-head h2{margin:0;font-size:24px;color:#fff;text-shadow:0 2px 12px #0008}
 .count{color:#fff;font-size:14px;font-weight:800;text-shadow:0 2px 8px #0008}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.card{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.30);border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 24px rgba(11,43,36,.14);display:flex;flex-direction:column}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:rgba(255,255,255,.05);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.30);border-radius:22px;overflow:hidden;box-shadow:0 10px 24px rgba(11,43,36,.14);display:flex;flex-direction:column;width:92%;margin:0 auto}
 .visual{display:none}
 .visual:before{display:none}
 .visual span{position:relative;font-size:32px}
-.card-body{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1;background:rgba(255,255,255,.20);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.card-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1;background:rgba(255,255,255,.20);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .badge{display:inline-flex;align-self:flex-start;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.42);color:var(--green2);font-weight:800;font-size:12px;border:1px solid rgba(255,255,255,.45)}
-.card h3{font-size:19px;margin:0;line-height:1.4}
-.addr{font-size:13px;color:#1f342d;line-height:1.6;font-weight:700}
-.desc{font-size:14px;line-height:1.75;color:#223730;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.actions{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(70px,.7fr) 44px;gap:8px;margin-top:auto}
-.btn{border:0;border-radius:13px;padding:10px 8px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none}
+.card h3{font-size:17px;margin:0;line-height:1.35}
+.addr{font-size:12px;color:#1f342d;line-height:1.5;font-weight:700}
+.desc{font-size:13px;line-height:1.65;color:#223730;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.actions{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(64px,.65fr) 40px;gap:8px;margin-top:auto}
+.btn{border:0;border-radius:12px;padding:8px 6px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;font-size:13px}
 .btn.primary{background:rgba(11,122,92,.86);color:#fff;border:1px solid rgba(255,255,255,.22)}
 .btn.secondary{background:rgba(255,255,255,.46);color:#284a40;border:1px solid rgba(255,255,255,.40)}
 .btn.fav{font-size:20px;background:rgba(255,243,217,.62);color:#a46b00;border:1px solid rgba(255,255,255,.36)}
@@ -79,8 +79,10 @@ footer{max-width:1100px;margin:30px auto;padding:0 18px 40px;color:#fff;font-siz
 @media(max-width:580px){
   .hero{min-height:330px}.hero:before{top:100px;width:250px;height:160px}
   h1{margin-top:54px}.lead{font-size:15px}
-  main{padding:0 12px}.grid{grid-template-columns:1fr}.search-wrap{display:grid;grid-template-columns:1fr}
-  .locate{padding:12px}.visual{height:112px}.actions{grid-template-columns:minmax(0,1.55fr) minmax(70px,.7fr) 46px}
+  main{padding:0 12px}.grid{grid-template-columns:1fr;gap:22px}.search-wrap{display:grid;grid-template-columns:1fr}
+  .card{width:88%;margin:0 auto}
+  .locate{padding:12px}.visual{height:112px}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
+  .btn{padding:8px 6px;font-size:12px}
 }
 </style>
 </head>
