@@ -111,18 +111,9 @@ let SPOTS=[],activeCategory="すべて";
 let PHOTO_CARDS_ENABLED=true;
 let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaFavorites")||"[]"));
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const mapUrl=s=>{
-  if(Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng))){
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.lat},${s.lng}`)}`;
-  }
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name} ${s.address}`)}`;
-};
-const routeUrl=s=>{
-  const dest=(Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lng)))
-    ? `${s.lat},${s.lng}`
-    : `${s.name} ${s.address}`;
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
-};
+const mapDestination=s=>`${s.name||""} ${s.address||""}`.trim();
+const mapUrl=s=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapDestination(s))}`;
+const routeUrl=s=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapDestination(s))}&travelmode=driving`;
 const searchUrl=s=>`https://www.google.com/search?q=${encodeURIComponent(s.name)}`;
 
 async function loadPhotoCardSetting(){

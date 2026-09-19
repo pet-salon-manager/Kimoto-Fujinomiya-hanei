@@ -38,7 +38,17 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
 .photo-toggle.off{background:#fde7e6;color:#a53d37}
 @media(max-width:700px){.photo-setting{align-items:stretch;flex-direction:column}.photo-toggle{width:100%}}
 
+
+.location-check{margin-top:10px;border:1px solid var(--line);border-radius:16px;padding:10px;background:#f8fbfa}
+.location-check-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.location-check-head .small{flex:1;min-width:220px}
+#locationMap{height:320px;border-radius:13px;overflow:hidden;background:#e8efec}
+.map-warning{font-size:11px;color:#7b5d1e;background:#fff7dc;border-radius:10px;padding:7px 9px;margin-top:7px;line-height:1.5}
+@media(max-width:700px){#locationMap{height:270px}}
+
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ integrity="sha256-p4NxAoJBhIINfQ3yn5lZtGldhnPa40YKxqK7FhE1Yq4=" crossorigin="">
 </head>
 <body>
 <header><div class="wrap top"><div><h1>観光スポット 管理者画面</h1><div class="small">ふじのみや旅ナビ</div></div><div class="row"><span id="modeBadge" class="status"></span><a class="button secondary" href="./index.html">公開画面</a><button id="logoutBtn" class="secondary hidden">ログアウト</button></div></div></header>
@@ -71,7 +81,7 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
       <div class="row">
         <button id="newBtn" class="primary">＋ 新しいスポットを追加</button>
         <button id="seedBtn" class="secondary hidden">初期35件をクラウドへ登録</button>
-        <button id="bulkGeocodeBtn" class="secondary">住所から緯度経度を一括取得</button>
+        <button id="bulkGeocodeBtn" class="secondary">未登録座標を一括取得（目安）</button>
         <button id="resetLocalBtn" class="secondary hidden">初期35件に戻す</button>
         <input id="listSearch" class="grow" type="search" placeholder="登録済みスポットを検索">
       </div>
@@ -109,8 +119,17 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
         <div><label>表示順</label><input id="sortOrder" type="number" step="1" min="0"></div>
       </div>
       <div class="row" style="margin-top:8px">
-        <button id="geocodeBtn" class="secondary" type="button">住所から緯度経度を取得</button>
-        <span class="small">保存時にも自動取得します。緯度経度を手入力した場合は手入力を優先します。</span>
+        <button id="geocodeBtn" class="secondary" type="button">住所から位置候補を取得</button>
+        <button id="googleMapsCheckBtn" class="secondary" type="button">Googleマップで確認</button>
+        <span class="small">自動取得は候補位置です。下の地図でピンを確認し、違う場合は地図をタップするかピンをドラッグして修正してください。</span>
+      </div>
+      <div class="location-check">
+        <div class="location-check-head">
+          <strong style="font-size:13px">位置を確認・修正</strong>
+          <span class="small">ピンを動かすと緯度・経度が自動で更新されます。</span>
+        </div>
+        <div id="locationMap"></div>
+        <div class="map-warning">住所検索サービスによっては番地ではなく地域の代表点を返すことがあります。正確な施設位置が必要な場合は、Googleマップでも確認してから保存してください。</div>
       </div>
       <div style="margin-top:12px"><label><input id="active" type="checkbox" checked style="width:auto;margin-right:6px">公開する</label></div>
       <div class="form-actions">
@@ -128,6 +147,8 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
   </div>
 </main>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
@@ -138,6 +159,88 @@ let photoCardsEnabled=true;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function msg(t){$("formMsg").textContent=t||""}
+
+let locationMap=null;
+let locationMarker=null;
+
+function validCoord(lat,lng){
+  lat=Number(lat); lng=Number(lng);
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat>=-90 && lat<=90 && lng>=-180 && lng<=180;
+}
+
+function setCoordinateInputs(lat,lng,{markManual=true}={}){
+  if(!validCoord(lat,lng)) return;
+  $("lat").value=Number(lat).toFixed(7);
+  $("lng").value=Number(lng).toFixed(7);
+  if(markManual){
+    $("lat").dataset.mapAdjusted="true";
+    $("lng").dataset.mapAdjusted="true";
+  }
+}
+
+function ensureLocationMap(lat=35.2218,lng=138.6216,zoom=12){
+  if(!window.L) return;
+
+  if(!locationMap){
+    locationMap=L.map("locationMap",{zoomControl:true}).setView([lat,lng],zoom);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+      maxZoom:19,
+      attribution:"&copy; OpenStreetMap contributors"
+    }).addTo(locationMap);
+
+    locationMap.on("click",e=>{
+      setCoordinateInputs(e.latlng.lat,e.latlng.lng,{markManual:true});
+      showLocationMarker(e.latlng.lat,e.latlng.lng,17);
+      msg("地図で位置を修正しました。保存するとこの緯度・経度が使われます。");
+    });
+  }
+
+  setTimeout(()=>locationMap.invalidateSize(),80);
+  return locationMap;
+}
+
+function showLocationMarker(lat,lng,zoom=16){
+  if(!validCoord(lat,lng)) return;
+  ensureLocationMap(lat,lng,zoom);
+
+  if(!locationMarker){
+    locationMarker=L.marker([lat,lng],{draggable:true}).addTo(locationMap);
+    locationMarker.on("dragend",()=>{
+      const p=locationMarker.getLatLng();
+      setCoordinateInputs(p.lat,p.lng,{markManual:true});
+      locationMap.panTo(p);
+      msg("ピンを移動しました。保存するとこの位置が使われます。");
+    });
+  }else{
+    locationMarker.setLatLng([lat,lng]);
+  }
+
+  locationMap.setView([lat,lng],zoom);
+}
+
+function clearLocationMarker(){
+  if(locationMap && locationMarker){
+    locationMap.removeLayer(locationMarker);
+    locationMarker=null;
+  }
+  if(locationMap){
+    locationMap.setView([35.2218,138.6216],12);
+    setTimeout(()=>locationMap.invalidateSize(),80);
+  }
+}
+
+function openGoogleMapsCheck(){
+  const name=$("name").value.trim();
+  const address=$("address").value.trim();
+  const q=`${name} ${address}`.trim();
+  if(!q){
+    msg("名称または住所を入力してください。");
+    return;
+  }
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,"_blank","noopener");
+}
+
 
 function updatePhotoToggleUI(){
   const btn=$("photoToggleBtn");
@@ -210,13 +313,14 @@ function normalizeJapaneseAddress(value){
     .trim();
 }
 
+
 async function geocodeByGSI(query){
   const q=normalizeJapaneseAddress(query);
   if(!q) return null;
 
   const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q);
   const res=await fetch(url,{headers:{"Accept":"application/json"}});
-  if(!res.ok) throw new Error("国土地理院の住所検索に接続できませんでした");
+  if(!res.ok) return null;
 
   const rows=await res.json();
   if(!Array.isArray(rows) || !rows.length) return null;
@@ -226,12 +330,11 @@ async function geocodeByGSI(query){
 
   const lng=Number(coords[0]);
   const lat=Number(coords[1]);
-  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if(!validCoord(lat,lng)) return null;
 
   return {
-    lat,
-    lng,
-    source:"国土地理院",
+    lat,lng,
+    source:"国土地理院（住所の代表点の場合があります）",
     display_name:rows[0]?.properties?.title || q
   };
 }
@@ -242,10 +345,14 @@ async function geocodeByNominatim(query){
 
   const url=new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format","jsonv2");
-  url.searchParams.set("limit","1");
+  url.searchParams.set("limit","5");
   url.searchParams.set("countrycodes","jp");
   url.searchParams.set("accept-language","ja");
   url.searchParams.set("q",q);
+
+  // 富士宮周辺を優先し、同名施設の遠方誤ヒットを減らす
+  url.searchParams.set("viewbox","138.30,35.55,138.90,34.95");
+  url.searchParams.set("bounded","1");
 
   const res=await fetch(url.toString(),{headers:{"Accept":"application/json"}});
   if(!res.ok) return null;
@@ -253,39 +360,41 @@ async function geocodeByNominatim(query){
   const rows=await res.json();
   if(!Array.isArray(rows) || !rows.length) return null;
 
-  const lat=Number(rows[0].lat);
-  const lng=Number(rows[0].lon);
-  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-
-  return {
-    lat,
-    lng,
-    source:"OpenStreetMap",
-    display_name:rows[0].display_name||q
-  };
+  for(const row of rows){
+    const lat=Number(row.lat);
+    const lng=Number(row.lon);
+    if(validCoord(lat,lng)){
+      return {
+        lat,lng,
+        source:"OpenStreetMap（施設名＋住所）",
+        display_name:row.display_name||q
+      };
+    }
+  }
+  return null;
 }
 
 async function geocodeAddress(address,name=""){
   const normalized=normalizeJapaneseAddress(address);
   if(!normalized) return null;
 
-  // 1. 日本住所に強い国土地理院を最優先
-  try{
-    const gsi=await geocodeByGSI(normalized);
-    if(gsi) return gsi;
-  }catch(e){}
-
-  // 2. スポット名＋住所で再検索
+  // 1. 施設名＋住所を最優先。施設そのものの位置を拾いやすい。
   if(name){
     try{
-      const withName=await geocodeByNominatim(`${name} ${address}`);
-      if(withName) return withName;
+      const byPlace=await geocodeByNominatim(`${name} ${address}`);
+      if(byPlace) return byPlace;
     }catch(e){}
   }
 
-  // 3. 住所だけで最後の検索
+  // 2. 住所だけで検索
   try{
-    return await geocodeByNominatim(address);
+    const byAddress=await geocodeByNominatim(address);
+    if(byAddress) return byAddress;
+  }catch(e){}
+
+  // 3. 最後に国土地理院。番地によっては地域代表点になるため要確認。
+  try{
+    return await geocodeByGSI(normalized);
   }catch(e){
     return null;
   }
@@ -300,36 +409,43 @@ async function geocodeCurrentAddress({silent=false}={}){
     return null;
   }
 
-  if(!silent) msg("住所から緯度経度を取得中…");
+  if(!silent) msg("施設名と住所から位置候補を取得中…");
 
   const result=await geocodeAddress(address,name);
 
   if(!result){
-    if(!silent) msg("住所から位置を特定できませんでした。番地まで正確に入力するか、緯度経度を手入力してください。");
+    if(!silent) msg("位置候補を取得できませんでした。Googleマップで確認し、地図をタップして位置を指定してください。");
     return null;
   }
 
-  $("lat").value=result.lat.toFixed(7);
-  $("lng").value=result.lng.toFixed(7);
+  setCoordinateInputs(result.lat,result.lng,{markManual:false});
+  showLocationMarker(result.lat,result.lng,17);
 
-  if(!silent) msg(`${result.source}から緯度経度を取得しました`);
+  if(!silent){
+    msg(`${result.source}から候補位置を取得しました。地図上のピンが実際の施設位置と合っているか確認してください。`);
+  }
   return result;
 }
 function clearForm(){
  $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("address").dataset.original="";$("area").value="";
  $("phone").value="";$("homepage").value="";$("description").value="";$("imageUrl").value="";
  $("imageFile").value="";$("lat").value="";$("lng").value="";$("lat").dataset.original="";$("lng").dataset.original="";$("sortOrder").value=(allSpots.length+1);
- $("active").checked=true;$("preview").style.display="none";$("preview").src="";
+ $("active").checked=true;$("preview").style.display="none";$("preview").src="";$("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";clearLocationMarker();
  $("deleteBtn").classList.add("hidden");$("editorTitle").textContent="スポットを追加";msg("");
 }
-function openNew(){clearForm();$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
+function openNew(){clearForm();$("editor").classList.add("show");ensureLocationMap();setTimeout(()=>locationMap&&locationMap.invalidateSize(),100);$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
 function openEdit(id){
  const s=allSpots.find(x=>String(x.id)===String(id)); if(!s)return;
  $("spotId").value=s.id;$("name").value=s.name||"";$("genre").value=s.genre||"";$("address").value=s.address||"";$("address").dataset.original=s.address||"";$("area").value=s.area||"";
  $("phone").value=s.phone||"";$("homepage").value=s.homepage||"";$("description").value=s.description||"";$("imageUrl").value=s.image_url||"";
  $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("lat").dataset.original=s.lat??"";$("lng").dataset.original=s.lng??"";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
  if(s.image_url){$("preview").src=s.image_url;$("preview").style.display="block"}else{$("preview").style.display="none"}
- $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent="スポットを編集";$("editor").classList.add("show");$("editor").scrollIntoView({behavior:"smooth",block:"start"});
+ $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent="スポットを編集";$("editor").classList.add("show");
+ $("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";
+ const currentLat=Number(s.lat),currentLng=Number(s.lng);
+ if(validCoord(currentLat,currentLng)) showLocationMarker(currentLat,currentLng,17); else {ensureLocationMap();clearLocationMarker();}
+ setTimeout(()=>locationMap&&locationMap.invalidateSize(),100);
+ $("editor").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function renderList(){
  const q=$("listSearch").value.trim().toLowerCase();
@@ -360,6 +476,8 @@ async function save(){
    const addressChanged=addressNow!==addressBefore;
    const coordsBlank=!$("lat").value || !$("lng").value;
    const coordsManuallyChanged=
+     $("lat").dataset.mapAdjusted==="true" ||
+     $("lng").dataset.mapAdjusted==="true" ||
      String($("lat").value)!==String($("lat").dataset.original||"") ||
      String($("lng").value)!==String($("lng").dataset.original||"");
 
@@ -427,7 +545,21 @@ $("listSearch").addEventListener("input",renderList);
 $("imageUrl").addEventListener("input",()=>{const v=$("imageUrl").value.trim();if(v){$("preview").src=v;$("preview").style.display="block"}else $("preview").style.display="none"});
 $("imageFile").addEventListener("change",()=>{const f=$("imageFile").files[0];if(f){$("preview").src=URL.createObjectURL(f);$("preview").style.display="block"}});
 
+
 $("geocodeBtn").onclick=()=>geocodeCurrentAddress();
+$("googleMapsCheckBtn").onclick=openGoogleMapsCheck;
+
+["lat","lng"].forEach(id=>{
+  $(id).addEventListener("change",()=>{
+    const lat=Number($("lat").value),lng=Number($("lng").value);
+    if(validCoord(lat,lng)){
+      $("lat").dataset.mapAdjusted="true";
+      $("lng").dataset.mapAdjusted="true";
+      showLocationMarker(lat,lng,17);
+    }
+  });
+});
+
 
 $("bulkGeocodeBtn").onclick=async()=>{
   if(!allSpots.length) return;
@@ -467,7 +599,7 @@ $("bulkGeocodeBtn").onclick=async()=>{
     alert(`完了しました。\n成功: ${ok}件\n取得できず: ${ng}件\n対象外: ${skipped}件`);
   }finally{
     $("bulkGeocodeBtn").disabled=false;
-    $("bulkGeocodeBtn").textContent="住所から緯度経度を一括取得";
+    $("bulkGeocodeBtn").textContent="未登録座標を一括取得（目安）";
   }
 };
 
