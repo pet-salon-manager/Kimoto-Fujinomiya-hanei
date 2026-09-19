@@ -45,7 +45,7 @@ main{max-width:1100px;margin:-28px auto 80px;padding:0 16px}
 .spot-thumb{width:100%;height:210px;object-fit:cover;border-radius:16px;margin:0 0 4px 0;border:1px solid rgba(255,255,255,.55);box-shadow:0 8px 22px rgba(0,0,0,.16);display:block}
 .ai-photo-note{font-size:10px;line-height:1.4;color:rgba(31,52,45,.72);margin:-1px 2px 6px;text-align:right}
 .addr,.contact{font-size:12px;color:#1f342d;line-height:1.5;font-weight:700}
-.contact{display:flex;flex-wrap:wrap;gap:6px}
+.contact{display:flex;flex-wrap:wrap;gap:6px}.search-note{font-size:10px;color:rgba(31,52,45,.66);margin-top:-2px}
 .contact a{color:#0a5f4a;text-decoration:none;background:rgba(255,255,255,.32);padding:4px 7px;border-radius:9px}
 .desc{font-size:13px;line-height:1.65;color:#223730;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .desc.expanded{display:block;-webkit-line-clamp:unset}
@@ -119,6 +119,7 @@ const routeUrl=s=>{
     : `${s.name} ${s.address}`;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
 };
+const searchUrl=s=>`https://www.google.com/search?q=${encodeURIComponent(s.name)}`;
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
 function renderChips(){
  const e=document.getElementById("chips");
@@ -137,13 +138,13 @@ function render(){
  g.innerHTML=data.map(s=>{
    const fav=favorites.has(s.id||s.name);
    const phone=s.phone?`<a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>`:"";
-   const hp=s.homepage?`<a href="${esc(s.homepage)}" target="_blank" rel="noopener">公式HP</a>`:"";
+   const hp=`<a href="${searchUrl(s)}" target="_blank" rel="noopener">🔎 検索する</a>`;
    const img=s.image_url?`<div class="photo-wrap"><img class="spot-thumb" src="${esc(s.image_url)}" alt="${esc(s.name)}の写真" loading="lazy" onerror="this.closest('.photo-wrap').style.display='none'"><div class="ai-photo-note">※写真はAIで編集したイメージ画像です。</div></div>`:"";
    return `<article class="card"><div class="card-body">${img}
      <div class="badge">${esc(s.genre||"観光スポット")}</div>
      <h3>${esc(s.name)}</h3>
      <div class="addr">📍 ${esc(s.address)}</div>
-     ${(phone||hp)?`<div class="contact">${phone}${hp}</div>`:""}
+     <div class="contact">${phone}${hp}</div><div class="search-note">「検索する」はスポット名でWeb検索します。</div>
      <div class="desc" data-expand>${esc(s.description)}</div>
      <div class="actions">
        <a class="btn primary" href="${routeUrl(s)}" target="_blank" rel="noopener">📍 現在地からの行き方</a>
