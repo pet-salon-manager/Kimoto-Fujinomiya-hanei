@@ -69,6 +69,15 @@ footer a{color:#fff}
  main{padding:0 12px}.grid{grid-template-columns:1fr;gap:22px}.search-wrap{display:grid}
  .card{width:92%}.locate{padding:12px}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
 }
+
+.pager{display:flex;justify-content:center;align-items:center;gap:10px;margin:22px 0 6px}
+.pager button{
+ border:0;border-radius:14px;padding:11px 18px;font-weight:900;font-size:13px;
+ background:rgba(255,255,255,.82);color:#174f40;box-shadow:0 6px 18px rgba(0,0,0,.10)
+}
+.pager button:disabled{opacity:.38}
+.page-info{color:#fff;font-size:12px;font-weight:900;text-shadow:0 2px 8px #0008;min-width:76px;text-align:center}
+
 </style>
 </head>
 <body>
@@ -87,6 +96,11 @@ footer a{color:#fff}
   </section>
   <div class="section-head"><h2>観光スポット</h2><div id="count" class="count"></div></div>
   <section id="grid" class="grid"></section>
+  <div class="pager">
+    <button id="prevPage" type="button">← 前の10件</button>
+    <div id="pageInfo" class="page-info"></div>
+    <button id="nextPage" type="button">次の10件 →</button>
+  </div>
   <div class="note">説明文はタップすると全文を開閉できます。住所や営業状況は出発前に公式情報でもご確認ください。</div>
 </main>
 <footer><strong>ふじのみや旅ナビ</strong><br>地図・経路ボタンは端末の地図サービスへ移動します。<br><a href="./admin.html">管理者画面</a></footer>
@@ -108,6 +122,8 @@ const categoryMap=[
  ["道の駅・観光拠点",s=>/道の駅|観光拠点/.test(s.genre||"")]
 ];
 let SPOTS=[],activeCategory="すべて";
+const PAGE_SIZE=10;
+let currentPage=1;
 let PHOTO_CARDS_ENABLED=true;
 let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaFavorites")||"[]"));
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -145,7 +161,7 @@ function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e
 function renderChips(){
  const e=document.getElementById("chips");
  e.innerHTML=categoryMap.map(([l])=>`<button class="chip ${l===activeCategory?"active":""}" data-cat="${esc(l)}">${esc(l)}</button>`).join("");
- e.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{activeCategory=b.dataset.cat;renderChips();render()});
+ e.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{activeCategory=b.dataset.cat;currentPage=1;renderChips();render()});
 }
 function filtered(){
  const q=document.getElementById("search").value.trim().toLowerCase();
@@ -167,10 +183,19 @@ function phoneContactName(phone){
 }
 
 function render(){
- const data=filtered(); document.getElementById("count").textContent=`${data.length}件`;
+ const data=filtered();
+ const totalPages=Math.max(1,Math.ceil(data.length/PAGE_SIZE));
+ if(currentPage>totalPages) currentPage=totalPages;
+ if(currentPage<1) currentPage=1;
+ const start=(currentPage-1)*PAGE_SIZE;
+ const pageData=data.slice(start,start+PAGE_SIZE);
+ document.getElementById("count").textContent=`${data.length}件`;
+ document.getElementById("pageInfo").textContent=data.length?`${currentPage} / ${totalPages}`:"";
+ document.getElementById("prevPage").disabled=currentPage<=1;
+ document.getElementById("nextPage").disabled=currentPage>=totalPages || !data.length;
  const g=document.getElementById("grid");
  if(!data.length){g.innerHTML='<div class="empty">条件に合うスポットがありません。</div>';return}
- g.innerHTML=data.map(s=>{
+ g.innerHTML=pageData.map(s=>{
    const fav=favorites.has(s.id||s.name);
    const phoneContact=phoneContactName(s.phone);
    const phone=s.phone?`<div class="phone-block"><a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>${phoneContact?`<div class="phone-contact-note">連絡先：${esc(phoneContact)}</div>`:""}</div>`:"";
@@ -197,7 +222,9 @@ async function load(){
  try{SPOTS=await SpotStore.list()}catch(e){toast("クラウド取得に失敗したため端末データを表示します");SPOTS=(window.DEFAULT_SPOTS||[])}
  renderChips();render();
 }
-document.getElementById("search").addEventListener("input",render);
+document.getElementById("search").addEventListener("input",()=>{currentPage=1;render()});
+document.getElementById("prevPage").onclick=()=>{if(currentPage>1){currentPage--;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
+document.getElementById("nextPage").onclick=()=>{const total=Math.ceil(filtered().length/PAGE_SIZE);if(currentPage<total){currentPage++;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
 load();
 </script>
 </body>

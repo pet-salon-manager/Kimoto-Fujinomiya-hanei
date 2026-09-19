@@ -9,10 +9,22 @@
 :root{--green:#0b7a5c;--green2:#174f40;--ink:#18362e;--line:rgba(255,255,255,.38)}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink)}
-body{
- background:
- linear-gradient(rgba(12,53,42,.05),rgba(12,53,42,.12)),
- url("./富士山を望む熱々焼きそば.png") center center/cover fixed no-repeat;
+body{background:#18362e;position:relative}
+body::before{
+ content:"";
+ position:fixed;
+ inset:0;
+ z-index:-2;
+ background:url("./restaurants-bg.png") center center/cover no-repeat;
+ transform:translateZ(0);
+}
+body::after{
+ content:"";
+ position:fixed;
+ inset:0;
+ z-index:-1;
+ background:linear-gradient(rgba(12,53,42,.10),rgba(12,53,42,.18));
+ pointer-events:none;
 }
 .hero{min-height:380px;color:#fff;padding:38px 18px 72px}
 .hero-inner{max-width:1040px;margin:auto}
@@ -80,6 +92,15 @@ footer a{color:#fff}
  main{padding:0 12px}.grid{grid-template-columns:1fr;gap:22px}.search-wrap{display:grid}
  .card{width:92%}.locate{padding:12px}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
 }
+
+.pager{display:flex;justify-content:center;align-items:center;gap:10px;margin:22px 0 6px}
+.pager button{
+ border:0;border-radius:14px;padding:11px 18px;font-weight:900;font-size:13px;
+ background:rgba(255,255,255,.82);color:#174f40;box-shadow:0 6px 18px rgba(0,0,0,.10)
+}
+.pager button:disabled{opacity:.38}
+.page-info{color:#fff;font-size:12px;font-weight:900;text-shadow:0 2px 8px #0008;min-width:76px;text-align:center}
+
 </style>
 </head>
 <body>
@@ -106,6 +127,11 @@ footer a{color:#fff}
   </div>
 
   <section id="grid" class="grid"></section>
+  <div class="pager">
+    <button id="prevPage" type="button">← 前の10件</button>
+    <div id="pageInfo" class="page-info"></div>
+    <button id="nextPage" type="button">次の10件 →</button>
+  </div>
 
   <div class="note">
     店名・住所・電話番号は登録情報を表示しています。営業時間・定休日・営業状況などは変更される場合があるため、来店前に店舗へご確認ください。
@@ -121,6 +147,8 @@ footer a{color:#fff}
 <script>
 const RESTAURANTS=[{"id":"restaurant-001","name":"Mr.エイジング","address":"元城町5-12","phone":"0544-66-6143"},{"id":"restaurant-002","name":"ToriTonあき","address":"西町25-2","phone":"090-9192-1962"},{"id":"restaurant-003","name":"あさ家","address":"元城町13-20","phone":"0544-22-3029"},{"id":"restaurant-004","name":"あるばとろす","address":"淀師523-4","phone":"0544-27-6005"},{"id":"restaurant-005","name":"いっぷく亭","address":"宮町2-9","phone":"0544-26-3849"},{"id":"restaurant-006","name":"うるおいてい","address":"淀師415-2","phone":"0544-24-7155"},{"id":"restaurant-007","name":"お好みハウス 平ゆう","address":"村山1322-4","phone":"0544-24-8555"},{"id":"restaurant-008","name":"お好み焼き 夢","address":"宝町12-12","phone":"090-3389-0363"},{"id":"restaurant-009","name":"お好み焼きハウス 名月","address":"杉田200-7","phone":"0544-26-3915"},{"id":"restaurant-010","name":"お好み焼き天国 みっちゃん家","address":"宝町11-24","phone":"0544-27-5305"},{"id":"restaurant-011","name":"お好み食堂 伊東","address":"淀師468-2","phone":"0544-27-6494"},{"id":"restaurant-012","name":"きんぎょ","address":"大宮町11-12","phone":"090-2925-0415"},{"id":"restaurant-013","name":"けやき坂","address":"万野原新田3052-3","phone":"0544-24-3392"},{"id":"restaurant-014","name":"ここずらよ","address":"宮町1-1","phone":"0544-24-2544"},{"id":"restaurant-015","name":"ご飯屋 まるや","address":"西町3-13","phone":"0544-24-5748"},{"id":"restaurant-016","name":"さがみ","address":"東町18-7","phone":"0544-23-6699"},{"id":"restaurant-017","name":"さの食堂","address":"大宮町21-1","phone":"0544-26-5869"},{"id":"restaurant-018","name":"じねん坊","address":"西町4-12","phone":"0544-26-2829"},{"id":"restaurant-019","name":"たぬき","address":"阿幸地町182","phone":"0544-22-4647"},{"id":"restaurant-020","name":"ちゃんこ高砂","address":"中央町4-11 C’est parti WARASHOU 1F","phone":"0544-57-9129"},{"id":"restaurant-021","name":"つかさ","address":"上井出276-7","phone":"0544-54-0033"},{"id":"restaurant-022","name":"なごみや","address":"小泉2862","phone":"0544-24-1714"},{"id":"restaurant-023","name":"はっちゃん","address":"北町20-1","phone":"0544-27-2575"},{"id":"restaurant-024","name":"はなの舞 富士宮駅南店","address":"錦町2-37","phone":"0544-21-0055"},{"id":"restaurant-025","name":"ばんばん","address":"淀師1159-41","phone":"0544-22-0292"},{"id":"restaurant-026","name":"ひこの","address":"朝日町19-1","phone":"0544-26-0736"},{"id":"restaurant-027","name":"ひまわり","address":"若の宮町32","phone":"0544-26-3279"},{"id":"restaurant-028","name":"ふくいや酒店","address":"浅間町8-5","phone":"0544-26-4698"},{"id":"restaurant-029","name":"ふくや","address":"宮原99-2","phone":"0544-27-9011"},{"id":"restaurant-030","name":"まごころ","address":"上井出2353-7","phone":"050-6874-4431"},{"id":"restaurant-031","name":"ますみ","address":"星山984-2","phone":"0544-27-3001"},{"id":"restaurant-032","name":"まとや","address":"宮町3-4","phone":"080-3620-5020"},{"id":"restaurant-033","name":"ままん","address":"大宮町5-17","phone":"0544-27-1515"},{"id":"restaurant-034","name":"まる忠","address":"山宮2113-1","phone":"090-1205-8654"},{"id":"restaurant-035","name":"みつば","address":"淀川町4-29","phone":"0544-55-3859"},{"id":"restaurant-036","name":"むすび屋 お宮横丁店","address":"宮町4-23 お宮横丁内","phone":"0544-25-2144"},{"id":"restaurant-037","name":"むめさん","address":"上井出854-50","phone":"0544-54-1161"},{"id":"restaurant-038","name":"やきそばランド","address":"大宮町19-12","phone":"0544-21-3960"},{"id":"restaurant-039","name":"やきそば貴","address":"矢立町943","phone":"0544-26-0886"},{"id":"restaurant-040","name":"やまだ食堂","address":"宝町1-2","phone":"0544-26-4208"},{"id":"restaurant-041","name":"ゆぐち","address":"万野原新田4032-3","phone":"0544-58-4092"},{"id":"restaurant-042","name":"よない","address":"下条485-1","phone":"0544-58-3988"},{"id":"restaurant-043","name":"わびすけ","address":"野中町806","phone":"0544-23-8578"},{"id":"restaurant-044","name":"キッチントトロ","address":"中央町7-18","phone":"0544-23-5932"},{"id":"restaurant-045","name":"スナックちーちゃん","address":"ひばりが丘1083","phone":"0544-22-2993"},{"id":"restaurant-046","name":"ドライブイン もちや","address":"猪之頭1114-1","phone":"0544-52-0202"},{"id":"restaurant-047","name":"マルキンストア","address":"杉田591-24","phone":"080-7418-5353"},{"id":"restaurant-048","name":"マルコウ","address":"貴船町9-8","phone":"0544-24-4245"},{"id":"restaurant-049","name":"ミマスヤ2","address":"元城町10-15","phone":"0544-23-5885"},{"id":"restaurant-050","name":"ロッテリア鉄ちゃん","address":"浅間町1-8","phone":"0544-25-6760"},{"id":"restaurant-051","name":"五平茶屋","address":"上井出3776-7","phone":"0544-54-0514"},{"id":"restaurant-052","name":"前島","address":"矢立町195","phone":"0544-27-6500"},{"id":"restaurant-053","name":"喜せらせら","address":"宮町9-17","phone":"0544-57-9684"},{"id":"restaurant-054","name":"喫茶ヴィーナス","address":"ひばりヶ丘287","phone":"0544-27-1144"},{"id":"restaurant-055","name":"土一揆","address":"山本561-5","phone":"0544-23-4040"},{"id":"restaurant-056","name":"大衆食堂 祭","address":"中央町5-1","phone":"0544-66-3711"},{"id":"restaurant-057","name":"大阪屋","address":"元城町12-10","phone":"0544-27-0237"},{"id":"restaurant-058","name":"天神橋","address":"上井出825-6","phone":"0544-54-0520※"},{"id":"restaurant-059","name":"富士宮やきそば め.め","address":"宮原385-9","phone":"090-1783-3665"},{"id":"restaurant-060","name":"富士宮やきそばアンテナショップ","address":"宮町4-23","phone":"0544-22-5341"},{"id":"restaurant-061","name":"富士宮焼きそば＆ビストロ FUJIBOKU","address":"宮町4-22","phone":"0544-57-9115"},{"id":"restaurant-062","name":"居酒屋なべちゃん","address":"淀師705-1 益穂ビル1F","phone":"0544-66-9185"},{"id":"restaurant-063","name":"平石屋","address":"上井出266-7","phone":"0544-54-0068"},{"id":"restaurant-064","name":"月あかり 富士宮店","address":"中央町3-9","phone":"0544-25-5255"},{"id":"restaurant-065","name":"松美","address":"穂波町7-1","phone":"0544-57-9193"},{"id":"restaurant-066","name":"浜新","address":"貴船町1-7","phone":"0544-26-2075"},{"id":"restaurant-067","name":"海友","address":"西町28-9","phone":"0544-27-0207"},{"id":"restaurant-068","name":"清ふじ","address":"北山1046-1","phone":"0544-58-2436"},{"id":"restaurant-069","name":"焼きそばお好み うめづ","address":"外神1273-5","phone":"0544-22-1104"},{"id":"restaurant-070","name":"白扇（ハクセン）","address":"上条438-1（新町横通り）","phone":"0544-58-0171"},{"id":"restaurant-071","name":"笑門","address":"宮町4-3","phone":"0544-25-7577"},{"id":"restaurant-072","name":"花多幸","address":"万野原新田3063-21","phone":"0544-25-2558"},{"id":"restaurant-073","name":"虹屋ミミ","address":"中央町3-9","phone":"0544-24-0791"},{"id":"restaurant-074","name":"豊延","address":"下条1611-1","phone":"090-8954-2235"},{"id":"restaurant-075","name":"農場レストランでいただきます","address":"内野1327-1","phone":"0544-54-0342"},{"id":"restaurant-076","name":"金太郎","address":"小泉1930","phone":"0544-22-6613"},{"id":"restaurant-077","name":"鉄板焼すぎ本","address":"西町16-3","phone":"0544-26-4477"},{"id":"restaurant-078","name":"鉄板焼すぎ本 お宮横丁店","address":"宮町4-23","phone":"0544-24-8272"},{"id":"restaurant-079","name":"鉄板焼ちゃん 駅前店","address":"中央町9-3","phone":"0544-22-3835"},{"id":"restaurant-080","name":"食事・酒処 いちゃり場","address":"三園平7","phone":"0544-66-6220"},{"id":"restaurant-081","name":"駄菓子屋 京ちゃん","address":"城北町234","phone":"0544-27-1208"}];
 let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaRestaurantFavorites")||"[]"));
+const PAGE_SIZE=10;
+let currentPage=1;
 
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const fullAddress=r=>`静岡県富士宮市${r.address||""}`;
@@ -140,7 +168,18 @@ function filtered(){
 
 function render(){
   const data=filtered();
+  const totalPages=Math.max(1,Math.ceil(data.length/PAGE_SIZE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  if(currentPage<1) currentPage=1;
+
+  const start=(currentPage-1)*PAGE_SIZE;
+  const pageData=data.slice(start,start+PAGE_SIZE);
+
   document.getElementById("count").textContent=`${data.length}件`;
+  document.getElementById("pageInfo").textContent=data.length ? `${currentPage} / ${totalPages}` : "";
+  document.getElementById("prevPage").disabled=currentPage<=1;
+  document.getElementById("nextPage").disabled=currentPage>=totalPages || !data.length;
+
   const grid=document.getElementById("grid");
 
   if(!data.length){
@@ -148,7 +187,7 @@ function render(){
     return;
   }
 
-  grid.innerHTML=data.map(r=>{
+  grid.innerHTML=pageData.map(r=>{
     const fav=favorites.has(r.id);
     return `<article class="card">
       <div class="card-body">
@@ -178,8 +217,9 @@ function render(){
     };
   });
 }
-
-document.getElementById("search").addEventListener("input",render);
+document.getElementById("search").addEventListener("input",()=>{currentPage=1;render()});
+document.getElementById("prevPage").onclick=()=>{if(currentPage>1){currentPage--;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
+document.getElementById("nextPage").onclick=()=>{const total=Math.ceil(filtered().length/PAGE_SIZE);if(currentPage<total){currentPage++;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
 render();
 </script>
 </body>
