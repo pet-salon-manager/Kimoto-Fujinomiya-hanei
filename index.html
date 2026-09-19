@@ -105,6 +105,7 @@ const categoryMap=[
  ["道の駅・観光拠点",s=>/道の駅|観光拠点/.test(s.genre||"")]
 ];
 let SPOTS=[],activeCategory="すべて";
+let PHOTO_CARDS_ENABLED=true;
 let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaFavorites")||"[]"));
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const mapUrl=s=>{
@@ -120,6 +121,32 @@ const routeUrl=s=>{
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
 };
 const searchUrl=s=>`https://www.google.com/search?q=${encodeURIComponent(s.name)}`;
+
+async function loadPhotoCardSetting(){
+  // Supabase未設定時だけ、この端末内の設定を利用
+  if(!SpotStore.cloudConfigured()){
+    PHOTO_CARDS_ENABLED=localStorage.getItem("fujinomiya_photo_cards_enabled")!=="false";
+    return;
+  }
+
+  try{
+    const sb=SpotStore.getClient();
+    const {data,error}=await sb
+      .from("app_settings")
+      .select("setting_value")
+      .eq("setting_key","photos_enabled")
+      .maybeSingle();
+
+    if(error) throw error;
+
+    // 設定行がまだない場合はONを既定値にする
+    PHOTO_CARDS_ENABLED=data ? data.setting_value !== false : true;
+  }catch(e){
+    // 設定テーブル未作成などの場合も、サイト自体は壊さずONで表示
+    PHOTO_CARDS_ENABLED=true;
+  }
+}
+
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
 function renderChips(){
  const e=document.getElementById("chips");
@@ -139,7 +166,7 @@ function render(){
    const fav=favorites.has(s.id||s.name);
    const phone=s.phone?`<a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>`:"";
    const hp=`<a href="${searchUrl(s)}" target="_blank" rel="noopener">🔎 検索する</a>`;
-   const img=s.image_url?`<div class="photo-wrap"><img class="spot-thumb" src="${esc(s.image_url)}" alt="${esc(s.name)}の写真" loading="lazy" onerror="this.closest('.photo-wrap').style.display='none'"><div class="ai-photo-note">※写真はAIで編集したイメージ画像です。</div></div>`:"";
+   const img=(PHOTO_CARDS_ENABLED && s.image_url)?`<div class="photo-wrap"><img class="spot-thumb" src="${esc(s.image_url)}" alt="${esc(s.name)}の写真" loading="lazy" onerror="this.closest('.photo-wrap').style.display='none'"><div class="ai-photo-note">※写真はAIで編集したイメージ画像です。</div></div>`:"";
    return `<article class="card"><div class="card-body">${img}
      <div class="badge">${esc(s.genre||"観光スポット")}</div>
      <h3>${esc(s.name)}</h3>
@@ -157,6 +184,7 @@ function render(){
  g.querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{const k=b.dataset.fav;favorites.has(k)?favorites.delete(k):favorites.add(k);localStorage.setItem("fujinomiyaFavorites",JSON.stringify([...favorites]));render()});
 }
 async function load(){
+ await loadPhotoCardSetting();
  try{SPOTS=await SpotStore.list()}catch(e){toast("クラウド取得に失敗したため端末データを表示します");SPOTS=(window.DEFAULT_SPOTS||[])}
  renderChips();render();
 }

@@ -28,6 +28,16 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
 .preview{max-width:220px;max-height:150px;border-radius:14px;margin-top:8px;display:none}
 .small{font-size:12px;color:#667a73;line-height:1.6}.hidden{display:none!important}
 @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}.spot-list{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row .button,.row button{flex:1}}
+
+.photo-setting{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.photo-setting-text{display:flex;flex-direction:column;gap:4px}
+.photo-setting-title{font-size:16px;font-weight:900}
+.photo-setting-state{font-size:12px;color:#667a73}
+.photo-toggle{min-width:150px}
+.photo-toggle.on{background:#0b7a5c;color:#fff}
+.photo-toggle.off{background:#fde7e6;color:#a53d37}
+@media(max-width:700px){.photo-setting{align-items:stretch;flex-direction:column}.photo-toggle{width:100%}}
+
 </style>
 </head>
 <body>
@@ -46,6 +56,17 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
   </section>
 
   <div id="adminArea" class="hidden">
+
+    <section class="panel">
+      <div class="photo-setting">
+        <div class="photo-setting-text">
+          <div class="photo-setting-title">カード写真の一括表示</div>
+          <div id="photoSettingState" class="photo-setting-state">設定を確認中…</div>
+        </div>
+        <button id="photoToggleBtn" class="photo-toggle on" type="button">全スポット：ON</button>
+      </div>
+      <div class="small" style="margin-top:8px">OFFにしても登録済みの写真は削除されません。ONに戻すと全スポットの写真が再表示されます。</div>
+    </section>
     <section class="panel">
       <div class="row">
         <button id="newBtn" class="primary">＋ 新しいスポットを追加</button>
@@ -113,9 +134,71 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
 <script src="./data-store.js"></script>
 <script>
 let allSpots=[];
+let photoCardsEnabled=true;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function msg(t){$("formMsg").textContent=t||""}
+
+function updatePhotoToggleUI(){
+  const btn=$("photoToggleBtn");
+  const state=$("photoSettingState");
+  if(!btn || !state) return;
+
+  btn.textContent=photoCardsEnabled ? "全スポット：ON" : "全スポット：OFF";
+  btn.classList.toggle("on",photoCardsEnabled);
+  btn.classList.toggle("off",!photoCardsEnabled);
+  state.textContent=photoCardsEnabled
+    ? "公開画面では、写真が登録されているカードに写真を表示します。"
+    : "公開画面では、すべてのスポットカードの写真を非表示にします。";
+}
+
+async function loadPhotoCardSetting(){
+  if(!SpotStore.cloudConfigured()){
+    photoCardsEnabled=localStorage.getItem("fujinomiya_photo_cards_enabled")!=="false";
+    updatePhotoToggleUI();
+    return;
+  }
+
+  const sb=SpotStore.getClient();
+  const {data,error}=await sb
+    .from("app_settings")
+    .select("setting_value")
+    .eq("setting_key","photos_enabled")
+    .maybeSingle();
+
+  if(error){
+    photoCardsEnabled=true;
+    updatePhotoToggleUI();
+    throw new Error("写真表示設定を読み込めません。先に同梱の PHOTO_TOGGLE_SETUP.sql をSupabaseで実行してください。");
+  }
+
+  photoCardsEnabled=data ? data.setting_value !== false : true;
+  updatePhotoToggleUI();
+}
+
+async function savePhotoCardSetting(enabled){
+  if(!SpotStore.cloudConfigured()){
+    localStorage.setItem("fujinomiya_photo_cards_enabled",enabled ? "true" : "false");
+    photoCardsEnabled=enabled;
+    updatePhotoToggleUI();
+    return;
+  }
+
+  const sb=SpotStore.getClient();
+  const {error}=await sb
+    .from("app_settings")
+    .upsert({
+      setting_key:"photos_enabled",
+      setting_value:enabled,
+      updated_at:new Date().toISOString()
+    },{onConflict:"setting_key"});
+
+  if(error) throw error;
+
+  photoCardsEnabled=enabled;
+  updatePhotoToggleUI();
+}
+
 
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
@@ -322,7 +405,13 @@ async function init(){
    }catch(e){$("loginPanel").classList.remove("hidden");$("loginMsg").textContent=e.message;return}
    $("logoutBtn").classList.remove("hidden");
  }
- $("adminArea").classList.remove("hidden");await reload();
+ $("adminArea").classList.remove("hidden");
+ try{
+   await loadPhotoCardSetting();
+ }catch(e){
+   $("photoSettingState").textContent=e.message;
+ }
+ await reload();
 }
 $("loginBtn").onclick=async()=>{
  $("loginMsg").textContent="ログイン中…";
@@ -379,6 +468,24 @@ $("bulkGeocodeBtn").onclick=async()=>{
   }finally{
     $("bulkGeocodeBtn").disabled=false;
     $("bulkGeocodeBtn").textContent="住所から緯度経度を一括取得";
+  }
+};
+
+
+$("photoToggleBtn").onclick=async()=>{
+  const btn=$("photoToggleBtn");
+  const next=!photoCardsEnabled;
+  const label=next ? "全スポットのカード写真を表示しますか？" : "全スポットのカード写真を非表示にしますか？";
+  if(!confirm(label)) return;
+
+  btn.disabled=true;
+  try{
+    await savePhotoCardSetting(next);
+    alert(next ? "全スポットのカード写真をONにしました。" : "全スポットのカード写真をOFFにしました。");
+  }catch(e){
+    alert("設定を変更できませんでした: "+e.message);
+  }finally{
+    btn.disabled=false;
   }
 };
 
