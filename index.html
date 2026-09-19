@@ -45,7 +45,10 @@ main{max-width:1100px;margin:-28px auto 80px;padding:0 16px}
 .spot-thumb{width:100%;height:210px;object-fit:cover;border-radius:16px;margin:0 0 4px 0;border:1px solid rgba(255,255,255,.55);box-shadow:0 8px 22px rgba(0,0,0,.16);display:block}
 .ai-photo-note{font-size:10px;line-height:1.4;color:rgba(31,52,45,.72);margin:-1px 2px 6px;text-align:right}
 .addr,.contact{font-size:12px;color:#1f342d;line-height:1.5;font-weight:700}
-.contact{display:flex;flex-wrap:wrap;gap:6px}.search-note{font-size:10px;color:rgba(31,52,45,.66);margin-top:-2px}
+.contact{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px}
+.phone-block{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.phone-contact-note{font-size:9.5px;line-height:1.35;color:rgba(31,52,45,.68);font-weight:700;margin:0 4px}
+.search-note{font-size:10px;color:rgba(31,52,45,.66);margin-top:-2px}
 .contact a{color:#0a5f4a;text-decoration:none;background:rgba(255,255,255,.32);padding:4px 7px;border-radius:9px}
 .desc{font-size:13px;line-height:1.65;color:#223730;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .desc.expanded{display:block;-webkit-line-clamp:unset}
@@ -158,13 +161,26 @@ function filtered(){
  const fn=categoryMap.find(([l])=>l===activeCategory)[1];
  return SPOTS.filter(fn).filter(s=>!q||`${s.name} ${s.genre} ${s.address} ${s.phone} ${s.homepage} ${s.description}`.toLowerCase().includes(q));
 }
+
+function phoneContactName(phone){
+ const digits=String(phone||"").replace(/\D/g,"");
+ const contacts={
+   "0544221489":"富士山世界遺産課企画係",
+   "0544275240":"富士宮市観光協会",
+   "0544221111":"富士宮市役所",
+   "0544221155":"富士宮市役所観光課"
+ };
+ return contacts[digits]||"";
+}
+
 function render(){
  const data=filtered(); document.getElementById("count").textContent=`${data.length}件`;
  const g=document.getElementById("grid");
  if(!data.length){g.innerHTML='<div class="empty">条件に合うスポットがありません。</div>';return}
  g.innerHTML=data.map(s=>{
    const fav=favorites.has(s.id||s.name);
-   const phone=s.phone?`<a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>`:"";
+   const phoneContact=phoneContactName(s.phone);
+   const phone=s.phone?`<div class="phone-block"><a href="tel:${esc(s.phone)}">☎ ${esc(s.phone)}</a>${phoneContact?`<div class="phone-contact-note">連絡先：${esc(phoneContact)}</div>`:""}</div>`:"";
    const hp=`<a href="${searchUrl(s)}" target="_blank" rel="noopener">🔎 検索する</a>`;
    const img=(PHOTO_CARDS_ENABLED && s.image_url)?`<div class="photo-wrap"><img class="spot-thumb" src="${esc(s.image_url)}" alt="${esc(s.name)}の写真" loading="lazy" onerror="this.closest('.photo-wrap').style.display='none'"><div class="ai-photo-note">※写真はAIで編集したイメージ画像です。</div></div>`:"";
    return `<article class="card"><div class="card-body">${img}
