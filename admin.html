@@ -214,7 +214,7 @@ label{font-size:12px;font-weight:800;display:block;margin-bottom:5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
-<script src="./data-store.js"></script>
+<script src="./data-store-v2.js?v=20260920-1"></script>
 <script src="./cloud-seed-data.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -438,6 +438,9 @@ function sameNameAddress(a,b){
 }
 async function migrateCurrentCatalog(){
   if(!SpotStore.cloudConfigured())throw new Error("Supabaseクラウド接続が必要です");
+  if(typeof SpotStore.bulkUpsert!=="function"){
+    throw new Error("クラウド保存モジュールが古い版です。data-store-v2.js がGitHubにアップロードされているか確認してください。");
+  }
   const seed=window.CLOUD_SEED_DATA;if(!seed)throw new Error("cloud-seed-data.js が読み込まれていません");
   $("migrateBtn").disabled=true;$("migrateProgress").textContent="既存クラウドデータを確認中…";
   try{
