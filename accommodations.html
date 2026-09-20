@@ -9,10 +9,29 @@
 :root{--blue:#2b6898;--blue2:#234f74;--ink:#173449;--line:rgba(255,255,255,.38)}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink)}
+html{background:#17344a}
 body{
- background:
- linear-gradient(rgba(14,43,67,.10),rgba(14,43,67,.18)),
- url("./fujinomiya-bg.jpg") center top/cover fixed no-repeat;
+ background:transparent;
+ position:relative;
+ isolation:isolate;
+}
+body::before{
+ content:"";
+ position:fixed;
+ inset:0;
+ z-index:-2;
+ background:url("./accommodations-bg.png") center center/cover no-repeat;
+ transform:translateZ(0);
+ -webkit-transform:translateZ(0);
+ pointer-events:none;
+}
+body::after{
+ content:"";
+ position:fixed;
+ inset:0;
+ z-index:-1;
+ background:linear-gradient(rgba(14,43,67,.10),rgba(14,43,67,.20));
+ pointer-events:none;
 }
 .hero{min-height:380px;color:#fff;padding:38px 18px 72px}
 .hero-inner{max-width:1040px;margin:auto}
