@@ -116,7 +116,40 @@ footer a{color:#fff}
 .page-switches .locate{min-height:48px}
 .lodging-link{background:rgba(33,91,140,.92)}
 @media(max-width:580px){.page-switches{grid-template-columns:1fr}}
+
+.map-toggle{
+ width:100%;border:0;border-radius:16px;padding:13px 16px;margin-bottom:10px;
+ background:rgba(20,103,76,.94);color:#fff;font-weight:900;font-size:15px;
+ box-shadow:0 6px 16px rgba(15,69,53,.16)
+}
+.map-toggle.open{background:rgba(48,80,112,.94)}
+.map-panel{
+ margin:12px 0 18px;padding:10px;border-radius:22px;
+ background:rgba(255,255,255,.67);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+ border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(0,0,0,.12)
+}
+#facilityMap{height:390px;border-radius:16px;overflow:hidden;background:#dfece5}
+.map-status{font-size:11px;line-height:1.45;color:#37574c;padding:7px 4px 1px;font-weight:700}
+.cute-pin{position:relative;width:40px;height:49px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28))}
+.cute-pin .pin-circle{
+ width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+ border:3px solid #fff;position:relative;z-index:2
+}
+.cute-pin .pin-tail{
+ position:absolute;left:13px;top:29px;width:14px;height:14px;
+ transform:rotate(45deg);border-right:3px solid #fff;border-bottom:3px solid #fff;z-index:1
+}
+.cute-pin.facility .pin-circle,.cute-pin.facility .pin-tail{background:#15945f}
+.cute-pin.current .pin-circle,.cute-pin.current .pin-tail{background:#2186df}
+.cute-pin svg{width:24px;height:24px;display:block}
+.map-popup-name{font-weight:900;font-size:13px;margin-bottom:4px}
+.map-popup-address{font-size:11px;line-height:1.4;margin-bottom:6px}
+.map-popup-link{display:inline-block;font-size:11px;font-weight:800;text-decoration:none;color:#0b7a5c}
+@media(max-width:580px){#facilityMap{height:330px}}
+
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ integrity="sha256-p4NxAoJBhIINfQ3yn5lZtGldhnPa40YKxqK7FhE1Yq4=" crossorigin="">
 </head>
 <body>
 <header class="hero"><div class="hero-inner">
@@ -130,6 +163,7 @@ footer a{color:#fff}
 
 <main>
   <section class="toolbar">
+    <button id="mapToggleBtn" class="map-toggle" type="button">🗺️ 地図で見る</button>
     <div class="search-wrap">
       <input id="search" class="search" type="search" placeholder="店名・住所・電話番号で検索">
       <div class="page-switches">
@@ -142,6 +176,10 @@ footer a{color:#fff}
   <div class="section-head">
     <h2>飲食店</h2>
     <div id="count" class="count"></div>
+  </div>
+  <div id="mapPanel" class="map-panel" hidden>
+    <div id="facilityMap"></div>
+    <div id="mapStatus" class="map-status">現在表示中の最大10件を地図に表示します。</div>
   </div>
 
   <section id="grid" class="grid"></section>
@@ -162,6 +200,8 @@ footer a{color:#fff}
   <a href="./index.html">観光スポットへ戻る</a>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./data-store-v2.js?v=20260920-1"></script>
@@ -173,6 +213,151 @@ const PAGE_SIZE=10;
 let currentPage=1;
 
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
+const MAP_PAGE_KIND="restaurant";
+let mapVisible=false;
+let appMap=null;
+let mapFacilityLayer=null;
+let mapCurrentMarker=null;
+let mapCurrentLatLng=null;
+let mapRunId=0;
+let CURRENT_MAP_ITEMS=[];
+
+const MAP_ART={
+ attraction:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="24" cy="8" r="4" fill="#ffd75a"/><path d="M4 25 14 10l5 7 3-4 7 12Z" fill="#fff"/><path d="m10 16 4-6 3 4-3 1-2-1Z" fill="#bdebd5"/></svg>`,
+ restaurant:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 17h18c0 5-4 9-9 9s-9-4-9-9Z" fill="#fff"/><path d="M10 14c-1-3 3-3 2-7M16 14c-1-3 3-3 2-7M22 14c-1-3 3-3 2-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M6 27h20" stroke="#ffd75a" stroke-width="2" stroke-linecap="round"/></svg>`,
+ accommodation:`<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 26V11l11-6 11 6v15Z" fill="#fff"/><rect x="9" y="14" width="5" height="5" rx="1" fill="#15945f"/><rect x="18" y="14" width="5" height="5" rx="1" fill="#15945f"/><rect x="14" y="21" width="5" height="5" rx="1" fill="#ffd75a"/><path d="M16 7c2-3 6 0 3 3l-3 3-3-3c-3-3 1-6 3-3Z" fill="#ff7a8a"/></svg>`
+};
+
+function mapFacilityIcon(){
+ return L.divIcon({
+   className:"",
+   html:`<div class="cute-pin facility"><div class="pin-circle">${MAP_ART[MAP_PAGE_KIND]}</div><div class="pin-tail"></div></div>`,
+   iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
+ });
+}
+function mapCurrentIcon(){
+ return L.divIcon({
+   className:"",
+   html:`<div class="cute-pin current"><div class="pin-circle"><svg viewBox="0 0 32 32"><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M8 27c1-6 4-9 8-9s7 3 8 9Z" fill="#fff"/></svg></div><div class="pin-tail"></div></div>`,
+   iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
+ });
+}
+function ensureFacilityMap(){
+ if(appMap) return appMap;
+ appMap=L.map("facilityMap",{zoomControl:true}).setView([35.222,138.621],12);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   maxZoom:19,attribution:"&copy; OpenStreetMap contributors"
+ }).addTo(appMap);
+ mapFacilityLayer=L.layerGroup().addTo(appMap);
+ return appMap;
+}
+function mapAddress(item){
+ const a=String(item.address||"").trim();
+ if(!a) return "";
+ if(a.startsWith("静岡県")) return a;
+ if(a.startsWith("富士宮市")) return "静岡県"+a;
+ return "静岡県富士宮市"+a;
+}
+function mapCache(){
+ try{return JSON.parse(localStorage.getItem("fujinomiyaMapGeoCacheV3")||"{}")}catch(e){return {}}
+}
+function saveMapCache(c){
+ try{localStorage.setItem("fujinomiyaMapGeoCacheV3",JSON.stringify(c))}catch(e){}
+}
+function validMapCoord(lat,lng){
+ lat=Number(lat);lng=Number(lng);
+ return Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180;
+}
+async function coordsForMap(item){
+ if(validMapCoord(item.lat,item.lng)) return [Number(item.lat),Number(item.lng)];
+ const address=mapAddress(item);
+ if(!address) return null;
+ const key=`${MAP_PAGE_KIND}|${item.name||""}|${address}`;
+ const cache=mapCache();
+ if(Array.isArray(cache[key])&&validMapCoord(cache[key][0],cache[key][1])) return cache[key];
+ try{
+   const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(address);
+   const res=await fetch(url,{headers:{"Accept":"application/json"}});
+   if(!res.ok) return null;
+   const rows=await res.json();
+   const c=rows?.[0]?.geometry?.coordinates;
+   if(!Array.isArray(c)||c.length<2) return null;
+   const lat=Number(c[1]),lng=Number(c[0]);
+   if(!validMapCoord(lat,lng)) return null;
+   cache[key]=[lat,lng];saveMapCache(cache);
+   return [lat,lng];
+ }catch(e){return null}
+}
+function popupHtml(item){
+ const name=esc(item.name||"");
+ const address=esc(item.address||"");
+ const q=encodeURIComponent(`${item.name||""} ${mapAddress(item)}`.trim());
+ return `<div class="map-popup-name">${name}</div><div class="map-popup-address">${address}</div><a class="map-popup-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${q}">Googleマップで開く</a>`;
+}
+function fitFacilityMap(bounds){
+ if(!appMap) return;
+ const all=[...bounds];
+ if(mapCurrentLatLng) all.push(mapCurrentLatLng);
+ if(all.length===1){appMap.setView(all[0],15);return}
+ if(all.length>1){appMap.fitBounds(all,{padding:[34,34],maxZoom:16});return}
+ appMap.setView([35.222,138.621],12);
+}
+async function refreshFacilityMap(items){
+ if(!mapVisible||!window.L) return;
+ const run=++mapRunId;
+ const map=ensureFacilityMap();
+ mapFacilityLayer.clearLayers();
+ const list=(items||[]).slice(0,10);
+ const bounds=[];
+ const status=document.getElementById("mapStatus");
+ status.textContent=`施設位置を確認中… 0 / ${list.length}`;
+ let done=0;
+ for(const item of list){
+   if(run!==mapRunId) return;
+   const c=await coordsForMap(item);
+   done++;
+   if(c){
+     bounds.push(c);
+     L.marker(c,{icon:mapFacilityIcon()}).addTo(mapFacilityLayer).bindPopup(popupHtml(item));
+   }
+   status.textContent=`施設位置を確認中… ${done} / ${list.length}`;
+ }
+ if(run!==mapRunId) return;
+ fitFacilityMap(bounds);
+ status.textContent=`現在表示中の${list.length}件を地図に表示しています。緑のピンをタップすると施設名を確認できます。`;
+ setTimeout(()=>map.invalidateSize(),50);
+}
+function locateCurrentOnMap(){
+ if(!navigator.geolocation||!mapVisible) return;
+ navigator.geolocation.getCurrentPosition(pos=>{
+   if(!mapVisible) return;
+   const c=[pos.coords.latitude,pos.coords.longitude];
+   mapCurrentLatLng=c;
+   const map=ensureFacilityMap();
+   if(mapCurrentMarker) mapCurrentMarker.setLatLng(c);
+   else mapCurrentMarker=L.marker(c,{icon:mapCurrentIcon(),zIndexOffset:1000}).addTo(map).bindPopup("<strong>現在地</strong>");
+   refreshFacilityMap(CURRENT_MAP_ITEMS);
+ },()=>{
+   const s=document.getElementById("mapStatus");
+   if(s) s.textContent+=" 現在地は位置情報の許可後に青いピンで表示されます。";
+ },{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+}
+document.getElementById("mapToggleBtn").onclick=()=>{
+ mapVisible=!mapVisible;
+ const panel=document.getElementById("mapPanel");
+ const btn=document.getElementById("mapToggleBtn");
+ panel.hidden=!mapVisible;
+ btn.classList.toggle("open",mapVisible);
+ btn.textContent=mapVisible?"✕ 地図を閉じる":"🗺️ 地図で見る";
+ if(mapVisible){
+   ensureFacilityMap();
+   setTimeout(()=>appMap.invalidateSize(),50);
+   refreshFacilityMap(CURRENT_MAP_ITEMS);
+   locateCurrentOnMap();
+ }
+};
+
 const fullAddress=r=>String(r.address||"").startsWith("静岡県")?String(r.address||""):`静岡県富士宮市${r.address||""}`;
 const destination=r=>`${r.name||""} ${fullAddress(r)}`.trim();
 const mapUrl=r=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination(r))}`;
@@ -198,6 +383,8 @@ function render(){
 
   const start=(currentPage-1)*PAGE_SIZE;
   const pageData=data.slice(start,start+PAGE_SIZE);
+ CURRENT_MAP_ITEMS=pageData;
+ if(mapVisible) refreshFacilityMap(CURRENT_MAP_ITEMS);
 
   document.getElementById("count").textContent=`${data.length}件`;
   document.getElementById("pageInfo").textContent=data.length ? `${currentPage} / ${totalPages}` : "";
@@ -207,6 +394,8 @@ function render(){
   const grid=document.getElementById("grid");
 
   if(!data.length){
+    CURRENT_MAP_ITEMS=[];
+    if(mapVisible) refreshFacilityMap([]);
     grid.innerHTML='<div class="empty">条件に合う飲食店がありません。</div>';
     return;
   }
