@@ -100,7 +100,7 @@ footer a{color:#fff}
  background:rgba(255,255,255,.67);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
  border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(0,0,0,.12)
 }
-.map-stage{position:relative;width:100%;height:390px;border-radius:16px;overflow:hidden;background:#dfece5}
+.map-stage{position:relative;width:100%;height:390px;border-radius:16px;overflow:hidden;background:#eef4ef}
 #facilityMap{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:100%!important;min-height:100%!important;border-radius:16px;overflow:hidden;background:#dfece5}
 #facilityMap .leaflet-container{width:100%!important;height:100%!important}
 #facilityMap .leaflet-tile-container img,#facilityMap .leaflet-tile{
@@ -167,19 +167,26 @@ footer a{color:#fff}
 }
 .leaflet-container .leaflet-marker-pane img,
 .leaflet-container .leaflet-shadow-pane img,
-.leaflet-container .leaflet-tile-pane img,
-.leaflet-container img.leaflet-image-layer,
-.leaflet-container .leaflet-tile{
+.leaflet-container img.leaflet-image-layer{
  max-width:none!important;
  max-height:none!important;
- width:auto!important;
- height:auto!important;
  padding:0!important;
  margin:0!important;
  border:0!important;
 }
-.leaflet-tile{visibility:hidden}
-.leaflet-tile-loaded{visibility:inherit}
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container .leaflet-tile{
+ max-width:none!important;
+ max-height:none!important;
+ width:256px!important;
+ height:256px!important;
+ padding:0!important;
+ margin:0!important;
+ border:0!important;
+ object-fit:fill!important;
+}
+.leaflet-tile{visibility:visible!important;opacity:1!important}
+.leaflet-tile-loaded{visibility:visible!important;opacity:1!important}
 .leaflet-zoom-animated{transform-origin:0 0}
 .leaflet-zoom-box{
  width:0;
@@ -340,7 +347,7 @@ footer a{color:#fff}
       <div id="facilityMap"></div>
       <button id="mapCurrentBtn" class="map-current-btn" type="button">◎ 現在地</button>
     </div>
-    <div id="mapStatus" class="map-status">現在表示中の最大10件を地図に表示します。</div>
+    <div id="mapStatus" class="map-status">このページの該当施設をすべて地図に表示します。</div>
   </div>
   <section id="grid" class="grid"></section>
   <div class="pager">
@@ -451,7 +458,7 @@ function ensureFacilityMap(){
    worldCopyJump:false
  }).setView(FUJINOMIYA_CENTER,11);
 
- const tileLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+ const tileLayer=L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{
    minZoom:10,
    maxZoom:18,
    tileSize:256,
@@ -459,9 +466,11 @@ function ensureFacilityMap(){
    keepBuffer:4,
    updateWhenIdle:false,
    updateWhenZooming:true,
-   attribution:"&copy; OpenStreetMap contributors"
+   crossOrigin:true,
+   attribution:"地理院地図"
  }).addTo(appMap);
- tileLayer.on("load",forceMapResize);
+ tileLayer.on("tileload",()=>forceMapResize());
+ tileLayer.on("load",()=>forceMapResize());
 
  appMap.setMaxBounds(FUJINOMIYA_MAX_BOUNDS);
  mapFacilityLayer=L.layerGroup().addTo(appMap);
@@ -543,24 +552,45 @@ async function refreshFacilityMap(items){
  const run=++mapRunId;
  const map=ensureFacilityMap();
  mapFacilityLayer.clearLayers();
- const list=(items||[]).slice(0,10);
+
+ const list=(items||[]);
  const bounds=[];
  const status=document.getElementById("mapStatus");
  status.textContent=`施設位置を確認中… 0 / ${list.length}`;
+
  let done=0;
- for(const item of list){
-   if(run!==mapRunId) return;
-   const c=await coordsForMap(item);
-   done++;
-   if(c){
-     bounds.push(c);
-     L.marker(c,{icon:mapFacilityIcon()}).addTo(mapFacilityLayer).bindPopup(popupHtml(item));
+ let plotted=0;
+ let nextIndex=0;
+ const workerCount=Math.min(6,Math.max(1,list.length));
+
+ async function worker(){
+   while(true){
+     const i=nextIndex++;
+     if(i>=list.length||run!==mapRunId) return;
+     const item=list[i];
+     const c=await coordsForMap(item);
+     if(run!==mapRunId) return;
+
+     done++;
+     if(c && FUJINOMIYA_MAX_BOUNDS.contains(c)){
+       bounds.push(c);
+       plotted++;
+       L.marker(c,{icon:mapFacilityIcon()})
+        .addTo(mapFacilityLayer)
+        .bindPopup(popupHtml(item));
+     }
+
+     if(done===list.length || done%10===0){
+       status.textContent=`施設位置を確認中… ${done} / ${list.length}（ピン ${plotted}件）`;
+     }
    }
-   status.textContent=`施設位置を確認中… ${done} / ${list.length}`;
  }
+
+ await Promise.all(Array.from({length:workerCount},()=>worker()));
  if(run!==mapRunId) return;
+
  fitFacilityMap(bounds);
- status.textContent=`現在表示中の${list.length}件を地図に表示しています。緑のピンをタップすると施設名を確認できます。`;
+ status.textContent=`このページの該当施設 ${list.length}件中、位置を確認できた ${plotted}件を地図に表示しています。`;
  forceMapResize();
 }
 function locateCurrentOnMap({move=true}={}){
@@ -731,7 +761,7 @@ function render(){
  if(currentPage<1) currentPage=1;
  const start=(currentPage-1)*PAGE_SIZE;
  const pageData=data.slice(start,start+PAGE_SIZE);
- CURRENT_MAP_ITEMS=pageData;
+ CURRENT_MAP_ITEMS=data;
  if(mapVisible) refreshFacilityMap(CURRENT_MAP_ITEMS);
  document.getElementById("count").textContent=`${data.length}件`;
  document.getElementById("pageInfo").textContent=data.length?`${currentPage} / ${totalPages}`:"";
