@@ -84,9 +84,7 @@ footer a{color:#fff}
 .phone-list{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
 
 
-.page-switches{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.page-switches .locate{min-height:48px}
-.lodging-link{background:rgba(33,91,140,.92)}
+
 @media(max-width:580px){.page-switches{grid-template-columns:1fr}}
 
 .map-toggle{
@@ -343,6 +341,46 @@ footer a{color:#fff}
  touch-action:none!important;
 }
 
+
+/* Swipe page navigation */
+.toolbar{
+ position:relative;
+ touch-action:pan-y;
+}
+.swipe-hint{
+ margin-top:9px;
+ text-align:center;
+ font-size:10.5px;
+ line-height:1.45;
+ font-weight:700;
+ color:rgba(31,52,45,.68);
+ user-select:none;
+ -webkit-user-select:none;
+}
+.swipe-dots{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:5px;
+ margin-top:5px;
+}
+.swipe-dot{
+ width:6px;
+ height:6px;
+ border-radius:50%;
+ background:rgba(31,52,45,.24);
+}
+.swipe-dot.active{
+ width:16px;
+ border-radius:999px;
+ background:rgba(11,122,92,.72);
+}
+.toolbar.swiping-left{transform:translateX(-8px)}
+.toolbar.swiping-right{transform:translateX(8px)}
+.toolbar{
+ transition:transform .12s ease;
+}
+
 </style>
 </head>
 <body>
@@ -356,13 +394,15 @@ footer a{color:#fff}
     <button id="mapToggleBtn" class="map-toggle" type="button">🗺️ 地図で見る</button>
     <div class="search-wrap">
       <input id="search" class="search" type="search" placeholder="スポット名・住所・見どころで検索">
-      <div class="page-switches">
-        <a class="locate page-switch" href="./restaurants.html">🍽️ 飲食店を検索</a>
-        <a class="locate page-switch lodging-link" href="./accommodations.html">🏨 宿泊施設を検索</a>
-      </div>
+      
     </div>
     <div id="chips" class="chips"></div>
-  </section>
+  
+    <div class="swipe-hint">
+      ← この枠を左右にスライドすると「観光スポット・飲食店・宿泊施設」を切り替えられます →
+      <div class="swipe-dots"><span class="swipe-dot active"></span><span class="swipe-dot"></span><span class="swipe-dot"></span></div>
+    </div>
+</section>
   <div class="section-head"><h2>観光スポット</h2><div id="count" class="count"></div></div>
   <div id="mapPanel" class="map-panel" hidden>
     <div class="map-stage">
@@ -490,7 +530,7 @@ function ensureFacilityMap(){
    easeLinearity:0.22
  }).setView(FUJINOMIYA_CENTER,11);
 
- const tileLayer=L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{
+ const tileLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
    minZoom:10,
    maxZoom:18,
    tileSize:256,
@@ -499,7 +539,7 @@ function ensureFacilityMap(){
    updateWhenIdle:false,
    updateWhenZooming:true,
    crossOrigin:true,
-   attribution:"地理院地図"
+   attribution:"&copy; OpenStreetMap contributors"
  }).addTo(appMap);
  tileLayer.on("tileload",()=>forceMapResize());
  tileLayer.on("load",()=>forceMapResize());
@@ -840,6 +880,69 @@ document.getElementById("search").addEventListener("input",()=>{currentPage=1;re
 document.getElementById("prevPage").onclick=()=>{if(currentPage>1){currentPage--;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
 document.getElementById("nextPage").onclick=()=>{const total=Math.ceil(filtered().length/PAGE_SIZE);if(currentPage<total){currentPage++;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
 load();
+
+
+const SWIPE_NEXT_PAGE="./restaurants.html";
+const SWIPE_PREV_PAGE="./accommodations.html";
+let toolbarTouchStartX=0;
+let toolbarTouchStartY=0;
+let toolbarTouchStartAt=0;
+let toolbarSwipeLocked=false;
+const swipeToolbar=document.querySelector(".toolbar");
+
+function swipeTargetIsInteractive(target){
+  return !!target.closest("input,textarea,select,button,a,[contenteditable='true'],#facilityMap,.leaflet-container");
+}
+
+function resetToolbarSwipe(){
+  if(!swipeToolbar)return;
+  swipeToolbar.classList.remove("swiping-left","swiping-right");
+  toolbarSwipeLocked=false;
+}
+
+if(swipeToolbar){
+  swipeToolbar.addEventListener("touchstart",e=>{
+    if(!e.touches||e.touches.length!==1||swipeTargetIsInteractive(e.target)){
+      toolbarSwipeLocked=true;
+      return;
+    }
+    toolbarSwipeLocked=false;
+    toolbarTouchStartX=e.touches[0].clientX;
+    toolbarTouchStartY=e.touches[0].clientY;
+    toolbarTouchStartAt=Date.now();
+  },{passive:true});
+
+  swipeToolbar.addEventListener("touchmove",e=>{
+    if(toolbarSwipeLocked||!e.touches||e.touches.length!==1)return;
+    const dx=e.touches[0].clientX-toolbarTouchStartX;
+    const dy=e.touches[0].clientY-toolbarTouchStartY;
+    if(Math.abs(dx)>18 && Math.abs(dx)>Math.abs(dy)*1.2){
+      swipeToolbar.classList.toggle("swiping-left",dx<0);
+      swipeToolbar.classList.toggle("swiping-right",dx>0);
+    }
+  },{passive:true});
+
+  swipeToolbar.addEventListener("touchend",e=>{
+    if(toolbarSwipeLocked){resetToolbarSwipe();return;}
+    const touch=e.changedTouches?.[0];
+    if(!touch){resetToolbarSwipe();return;}
+    const dx=touch.clientX-toolbarTouchStartX;
+    const dy=touch.clientY-toolbarTouchStartY;
+    const elapsed=Date.now()-toolbarTouchStartAt;
+
+    const horizontal=Math.abs(dx)>=65 && Math.abs(dx)>Math.abs(dy)*1.25;
+    const timely=elapsed<1100;
+
+    resetToolbarSwipe();
+
+    if(horizontal&&timely){
+      location.href=dx<0?SWIPE_NEXT_PAGE:SWIPE_PREV_PAGE;
+    }
+  },{passive:true});
+
+  swipeToolbar.addEventListener("touchcancel",resetToolbarSwipe,{passive:true});
+}
+
 </script>
 </body>
 </html>
