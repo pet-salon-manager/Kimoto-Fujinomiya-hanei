@@ -279,8 +279,21 @@ function render(){
 }
 async function load(){
  await loadPhotoCardSetting();
- try{SPOTS=await SpotStore.list()}catch(e){toast("クラウド取得に失敗したため端末データを表示します");SPOTS=(window.DEFAULT_SPOTS||[])}
- SPOTS=mergeExcelAttractions(SPOTS);
+ try{
+   let cloudCatalog=false;
+   if(SpotStore.cloudConfigured()){
+     try{cloudCatalog=await SpotStore.hasSeededType("attraction")}catch(e){cloudCatalog=false}
+   }
+   if(cloudCatalog){
+     SPOTS=await SpotStore.list({placeType:"attraction"});
+   }else{
+     try{SPOTS=await SpotStore.list()}catch(e){SPOTS=(window.DEFAULT_SPOTS||[])}
+     SPOTS=mergeExcelAttractions(SPOTS);
+   }
+ }catch(e){
+   toast("クラウド取得に失敗したため端末データを表示します");
+   SPOTS=mergeExcelAttractions(window.DEFAULT_SPOTS||[]);
+ }
  renderChips();render();
 }
 document.getElementById("search").addEventListener("input",()=>{currentPage=1;render()});

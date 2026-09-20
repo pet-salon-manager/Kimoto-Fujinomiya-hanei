@@ -1,60 +1,79 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ふじのみや旅ナビ 管理者</title>
 <style>
-:root{--g:#0b7a5c;--ink:#15332b;--bg:#eef4f1;--line:#d8e5df;--danger:#b33a35}
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
-header{position:sticky;top:0;z-index:8;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 16px}
-.wrap{max-width:1100px;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.top h1{font-size:20px;margin:0}.status{font-size:12px;font-weight:800;padding:6px 9px;border-radius:999px;background:#e5f4ee;color:#0b6f55}
-main{max-width:1100px;margin:22px auto;padding:0 14px 50px}
-.panel{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 8px 26px #173d3310}
-.notice{background:#fff7dc;border-color:#eadca5;color:#6e5614;line-height:1.7;font-size:13px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.grow{flex:1}
-button,.button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.primary{background:var(--g);color:#fff}.secondary{background:#edf4f1;color:#284b40}.danger{background:#fde7e6;color:var(--danger)}
-input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:inherit;background:#fff}
+:root{--g:#0b7a5c;--g2:#174f40;--ink:#15332b;--bg:#eef4f1;--line:#d8e5df;--danger:#b33a35;--blue:#2b6898;--brown:#9b5c23}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:8;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 16px}
+.wrap{max-width:1120px;margin:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-size:20px;margin:0} h2{font-size:18px}
+main{max-width:1120px;margin:20px auto 60px;padding:0 14px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:16px;box-shadow:0 8px 24px rgba(25,70,55,.06)}
+.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.grow{flex:1}
+.small{font-size:12px;color:#667a73;line-height:1.6}
+.status{font-size:12px;font-weight:800;padding:6px 9px;border-radius:999px;background:#e4f3ed;color:var(--g2)}
+button,.button{border:0;border-radius:11px;padding:10px 13px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.primary{background:var(--g);color:#fff}.secondary{background:#edf4f1;color:#25473d}.danger{background:#ffe5e2;color:#a1302b}.hidden{display:none!important}
+input,textarea,select{width:100%;border:1px solid #cadad3;border-radius:11px;padding:11px;font:inherit;background:#fff;color:var(--ink)}
 textarea{min-height:120px;resize:vertical}
-label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+label{font-size:12px;font-weight:800;display:block;margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .editor{display:none}.editor.show{display:block}
-.spot-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-.item{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:15px;padding:9px;background:#fbfdfc}
-.thumb{width:58px;height:58px;border-radius:12px;object-fit:cover;background:#e7efeb;display:grid;place-items:center;font-size:22px}
-.item h3{font-size:14px;margin:0 0 4px}.meta{font-size:11px;color:#687c75;line-height:1.5}
-.item button{padding:8px 10px}.login{max-width:450px;margin:30px auto}
-.preview{max-width:220px;max-height:150px;border-radius:14px;margin-top:8px;display:none}
-.small{font-size:12px;color:#667a73;line-height:1.6}.hidden{display:none!important}
-@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}.spot-list{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row .button,.row button{flex:1}}
-
+.form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.preview{display:none;width:100%;max-width:260px;height:150px;object-fit:cover;border-radius:12px;margin-top:8px;border:1px solid var(--line)}
+.type-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.type-tab{background:#edf4f1;color:#31534a}.type-tab.active{background:var(--g);color:#fff}
+.type-tab[data-type="restaurant"].active{background:var(--brown)}
+.type-tab[data-type="accommodation"].active{background:var(--blue)}
+.item{display:grid;grid-template-columns:62px 1fr auto;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid #e8efec}
+.item:last-child{border-bottom:0}.item h3{margin:0 0 4px;font-size:15px}
+.meta{font-size:11px;color:#6b7e77;line-height:1.55}.thumb{width:62px;height:50px;border-radius:10px;object-fit:cover;background:#e8f0ed;display:grid;place-items:center}
+.type-chip{display:inline-block;font-size:10px;font-weight:900;padding:3px 7px;border-radius:999px;background:#e8f3ef;color:#285143;margin-right:5px}
+.migrate{background:linear-gradient(135deg,#fff9e8,#f5fbf8);border:1px solid #eadfb5}
+.migrate strong{font-size:15px}
+.migrate-progress{margin-top:8px;font-size:12px;font-weight:800;color:#47685e}
 .photo-setting{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.photo-setting-text{display:flex;flex-direction:column;gap:4px}
-.photo-setting-title{font-size:16px;font-weight:900}
-.photo-setting-state{font-size:12px;color:#667a73}
-.photo-toggle{min-width:150px}
-.photo-toggle.on{background:#0b7a5c;color:#fff}
-.photo-toggle.off{background:#fde7e6;color:#a53d37}
-@media(max-width:700px){.photo-setting{align-items:stretch;flex-direction:column}.photo-toggle{width:100%}}
-
-
-.location-check{margin-top:10px;border:1px solid var(--line);border-radius:16px;padding:10px;background:#f8fbfa}
-.location-check-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.location-check-head .small{flex:1;min-width:220px}
-#locationMap{height:320px;border-radius:13px;overflow:hidden;background:#e8efec}
+.photo-toggle.on{background:var(--g);color:#fff}.photo-toggle.off{background:#fde7e6;color:#a53d37}
+.list-pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:14px}
+.list-pager button{padding:8px 12px}.list-pager span{font-size:12px;color:#667a73;min-width:70px;text-align:center}
+#locationMap{height:300px;border-radius:13px;overflow:hidden;background:#e8efec;margin-top:10px}
 .map-warning{font-size:11px;color:#7b5d1e;background:#fff7dc;border-radius:10px;padding:7px 9px;margin-top:7px;line-height:1.5}
-@media(max-width:700px){#locationMap{height:270px}}
-
+.notice{background:#fff8dc}
+.login{max-width:470px;margin:40px auto}
+@media(max-width:700px){
+ .grid2,.grid3{grid-template-columns:1fr}
+ .type-tabs{grid-template-columns:1fr}
+ .photo-setting{align-items:stretch;flex-direction:column}
+ .top{align-items:flex-start;flex-direction:column}
+ .item{grid-template-columns:52px 1fr auto}.thumb{width:52px;height:46px}
+ #locationMap{height:260px}
+}
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
  integrity="sha256-p4NxAoJBhIINfQ3yn5lZtGldhnPa40YKxqK7FhE1Yq4=" crossorigin="">
 </head>
 <body>
-<header><div class="wrap top"><div><h1>観光スポット 管理者画面</h1><div class="small">ふじのみや旅ナビ</div></div><div class="row"><span id="modeBadge" class="status"></span><a class="button secondary" href="./index.html">公開画面</a><button id="logoutBtn" class="secondary hidden">ログアウト</button></div></div></header>
+<header>
+  <div class="wrap top">
+    <div><h1>施設 管理者画面</h1><div class="small">観光スポット・飲食店・宿泊施設をクラウド管理</div></div>
+    <div class="row">
+      <span id="modeBadge" class="status"></span>
+      <a class="button secondary" href="./index.html">公開画面</a>
+      <button id="logoutBtn" class="secondary hidden">ログアウト</button>
+    </div>
+  </div>
+</header>
+
 <main>
   <section id="localNotice" class="panel notice hidden">
-    現在は「この端末のみ」モードです。ここでの追加・編集・削除は、このブラウザではすぐ公開画面へ反映されます。全利用者へ同じ内容を反映するには、同梱の <b>SUPABASE_SETUP.md</b> に沿ってSupabaseを接続してください。
+    現在はこの端末のみのモードです。全データをクラウド管理するにはSupabase接続が必要です。
   </section>
 
   <section id="loginPanel" class="panel login hidden">
@@ -66,83 +85,126 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
   </section>
 
   <div id="adminArea" class="hidden">
+    <section id="migrationPanel" class="panel migrate">
+      <div class="row">
+        <div class="grow">
+          <strong>現在載っている全データをSupabaseへ登録・更新</strong>
+          <div class="small">観光スポット 113件 / 飲食店 697件 / 宿泊施設 37件。既存の観光写真・緯度経度・公開状態はできるだけ保持します。</div>
+        </div>
+        <button id="migrateBtn" class="primary">クラウドへ一括登録・更新</button>
+      </div>
+      <div id="migrateProgress" class="migrate-progress"></div>
+    </section>
 
     <section class="panel">
       <div class="photo-setting">
-        <div class="photo-setting-text">
-          <div class="photo-setting-title">カード写真の一括表示</div>
-          <div id="photoSettingState" class="photo-setting-state">設定を確認中…</div>
+        <div>
+          <strong>観光スポットカードの写真表示</strong>
+          <div id="photoSettingState" class="small">設定を確認中…</div>
         </div>
         <button id="photoToggleBtn" class="photo-toggle on" type="button">全スポット：ON</button>
       </div>
-      <div class="small" style="margin-top:8px">OFFにしても登録済みの写真は削除されません。ONに戻すと全スポットの写真が再表示されます。</div>
     </section>
+
+    <section class="panel">
+      <div class="type-tabs">
+        <button class="type-tab active" data-type="attraction">🗻 観光スポット</button>
+        <button class="type-tab" data-type="restaurant">🍽️ 飲食店</button>
+        <button class="type-tab" data-type="accommodation">🏨 宿泊施設</button>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="row">
-        <button id="newBtn" class="primary">＋ 新しいスポットを追加</button>
-        <button id="seedBtn" class="secondary hidden">初期35件をクラウドへ登録</button>
-        <button id="bulkGeocodeBtn" class="secondary">未登録座標を一括取得（目安）</button>
-        <button id="resetLocalBtn" class="secondary hidden">初期35件に戻す</button>
-        <input id="listSearch" class="grow" type="search" placeholder="登録済みスポットを検索">
+        <button id="newBtn" class="primary">＋ 新しく追加</button>
+        <button id="bulkGeocodeBtn" class="secondary">未登録座標を一括取得（表示中）</button>
+        <input id="listSearch" class="grow" type="search" placeholder="名称・住所・電話番号・説明文で検索">
       </div>
     </section>
 
     <section id="editor" class="panel editor">
-      <h2 id="editorTitle">スポットを追加</h2>
+      <h2 id="editorTitle">施設を追加</h2>
       <input id="spotId" type="hidden">
+      <input id="sourceKey" type="hidden">
+
       <div class="grid2">
+        <div><label>種類 *</label>
+          <select id="placeType">
+            <option value="attraction">観光スポット</option>
+            <option value="restaurant">飲食店</option>
+            <option value="accommodation">宿泊施設</option>
+          </select>
+        </div>
         <div><label>名称 *</label><input id="name" required></div>
-        <div><label>ジャンル</label><input id="genre" placeholder="自然・名勝"></div>
       </div>
+
       <div class="grid2" style="margin-top:12px">
-        <div><label>住所</label><input id="address" placeholder="静岡県富士宮市…"></div>
+        <div><label>ジャンル</label><input id="genre" placeholder="自然・名勝 / 飲食店 / 宿泊施設"></div>
         <div><label>エリア</label><input id="area" placeholder="市街地・朝霧など"></div>
       </div>
+
       <div class="grid2" style="margin-top:12px">
-        <div><label>電話番号</label><input id="phone" type="tel" placeholder="0544-00-0000"></div>
-        <div><label>ホームページ</label><input id="homepage" type="url" placeholder="https://..."></div>
+        <div><label>住所</label><input id="address" placeholder="静岡県富士宮市…"></div>
+        <div><label>住所の注意書き</label><input id="addressNote" placeholder="駐車場、受付場所など"></div>
       </div>
-      <div style="margin-top:12px"><label>細かい説明文</label><textarea id="description" placeholder="見どころ、歴史、楽しみ方、注意点など"></textarea></div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div><label>電話番号</label><input id="phone" type="text" placeholder="0544-00-0000"></div>
+        <div><label>電話番号の注意書き</label><input id="phoneNote" placeholder="連絡先、受付時間、要予約など"></div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div><label>電話番号2</label><input id="phone2" type="text"></div>
+        <div><label>電話番号2の注意書き</label><input id="phone2Note"></div>
+      </div>
+
+      <div style="margin-top:12px"><label>ホームページ</label><input id="homepage" type="url" placeholder="https://..."></div>
+      <div style="margin-top:12px"><label>細かい説明文</label><textarea id="description"></textarea></div>
+
       <div class="grid2" style="margin-top:12px">
         <div>
           <label>写真URL</label><input id="imageUrl" type="url" placeholder="https://...">
-          <div class="small">URLを直接入力するか、下から写真を選択できます。</div>
+          <div class="small">既存写真はこのまま保持できます。URL入力または写真アップロードが可能です。</div>
         </div>
         <div>
           <label>写真を選択</label><input id="imageFile" type="file" accept="image/*">
           <img id="preview" class="preview" alt="写真プレビュー">
         </div>
       </div>
+
       <div class="grid3" style="margin-top:12px">
-        <div><label>緯度</label><input id="lat" type="number" step="any" placeholder="住所から自動取得"></div>
-        <div><label>経度</label><input id="lng" type="number" step="any" placeholder="住所から自動取得"></div>
+        <div><label>緯度</label><input id="lat" type="number" step="any"></div>
+        <div><label>経度</label><input id="lng" type="number" step="any"></div>
         <div><label>表示順</label><input id="sortOrder" type="number" step="1" min="0"></div>
       </div>
-      <div class="row" style="margin-top:8px">
+
+      <div class="row" style="margin-top:10px">
         <button id="geocodeBtn" class="secondary" type="button">住所から位置候補を取得</button>
         <button id="googleMapsCheckBtn" class="secondary" type="button">Googleマップで確認</button>
-        <span class="small">自動取得は候補位置です。下の地図でピンを確認し、違う場合は地図をタップするかピンをドラッグして修正してください。</span>
       </div>
-      <div class="location-check">
-        <div class="location-check-head">
-          <strong style="font-size:13px">位置を確認・修正</strong>
-          <span class="small">ピンを動かすと緯度・経度が自動で更新されます。</span>
-        </div>
-        <div id="locationMap"></div>
-        <div class="map-warning">住所検索サービスによっては番地ではなく地域の代表点を返すことがあります。正確な施設位置が必要な場合は、Googleマップでも確認してから保存してください。</div>
-      </div>
+      <div id="locationMap"></div>
+      <div class="map-warning">住所検索は代表点になる場合があります。正確な位置が必要な場合は地図をタップ、またはピンをドラッグして修正してください。</div>
+
       <div style="margin-top:12px"><label><input id="active" type="checkbox" checked style="width:auto;margin-right:6px">公開する</label></div>
       <div class="form-actions">
         <button id="saveBtn" class="primary">保存</button>
         <button id="cancelBtn" class="secondary">キャンセル</button>
-        <button id="deleteBtn" class="danger hidden">このスポットを削除</button>
+        <button id="deleteBtn" class="danger hidden">この施設を削除</button>
       </div>
       <div id="formMsg" class="small" style="margin-top:10px"></div>
     </section>
 
     <section class="panel">
-      <div class="row"><h2 style="margin:0" class="grow">登録済みスポット</h2><span id="spotCount" class="small"></span></div>
-      <div id="spotList" class="spot-list"></div>
+      <div class="row">
+        <h2 id="listTitle" style="margin:0" class="grow">登録済み観光スポット</h2>
+        <span id="spotCount" class="small"></span>
+      </div>
+      <div id="spotList"></div>
+      <div class="list-pager">
+        <button id="adminPrev" class="secondary">← 前へ</button>
+        <span id="adminPageInfo"></span>
+        <button id="adminNext" class="secondary">次へ →</button>
+      </div>
     </section>
   </div>
 </main>
@@ -153,476 +215,340 @@ label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#4d635c}
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
 <script src="./data-store.js"></script>
+<script src="./cloud-seed-data.js"></script>
 <script>
-let allSpots=[];
-let photoCardsEnabled=true;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-function msg(t){$("formMsg").textContent=t||""}
-
+const typeLabels={attraction:"観光スポット",restaurant:"飲食店",accommodation:"宿泊施設"};
+let currentType="attraction";
+let allSpots=[];
+let adminPage=1;
+const ADMIN_PAGE_SIZE=40;
+let photoCardsEnabled=true;
 let locationMap=null;
 let locationMarker=null;
 
+function msg(t){$("formMsg").textContent=t||""}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function validCoord(lat,lng){
-  lat=Number(lat); lng=Number(lng);
-  return Number.isFinite(lat) && Number.isFinite(lng) &&
-         lat>=-90 && lat<=90 && lng>=-180 && lng<=180;
+  lat=Number(lat);lng=Number(lng);
+  return Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180;
 }
-
-function setCoordinateInputs(lat,lng,{markManual=true}={}){
-  if(!validCoord(lat,lng)) return;
-  $("lat").value=Number(lat).toFixed(7);
-  $("lng").value=Number(lng).toFixed(7);
-  if(markManual){
-    $("lat").dataset.mapAdjusted="true";
-    $("lng").dataset.mapAdjusted="true";
-  }
+function setCoordinateInputs(lat,lng,{manual=true}={}){
+  if(!validCoord(lat,lng))return;
+  $("lat").value=Number(lat).toFixed(7);$("lng").value=Number(lng).toFixed(7);
+  if(manual){$("lat").dataset.mapAdjusted="true";$("lng").dataset.mapAdjusted="true"}
 }
-
 function ensureLocationMap(lat=35.2218,lng=138.6216,zoom=12){
-  if(!window.L) return;
-
+  if(!window.L)return;
   if(!locationMap){
-    locationMap=L.map("locationMap",{zoomControl:true}).setView([lat,lng],zoom);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-      maxZoom:19,
-      attribution:"&copy; OpenStreetMap contributors"
-    }).addTo(locationMap);
-
-    locationMap.on("click",e=>{
-      setCoordinateInputs(e.latlng.lat,e.latlng.lng,{markManual:true});
-      showLocationMarker(e.latlng.lat,e.latlng.lng,17);
-      msg("地図で位置を修正しました。保存するとこの緯度・経度が使われます。");
-    });
+    locationMap=L.map("locationMap").setView([lat,lng],zoom);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap contributors"}).addTo(locationMap);
+    locationMap.on("click",e=>{setCoordinateInputs(e.latlng.lat,e.latlng.lng);showLocationMarker(e.latlng.lat,e.latlng.lng,17);msg("地図で位置を修正しました。")});
   }
-
   setTimeout(()=>locationMap.invalidateSize(),80);
-  return locationMap;
 }
-
 function showLocationMarker(lat,lng,zoom=16){
-  if(!validCoord(lat,lng)) return;
+  if(!validCoord(lat,lng))return;
   ensureLocationMap(lat,lng,zoom);
-
   if(!locationMarker){
     locationMarker=L.marker([lat,lng],{draggable:true}).addTo(locationMap);
-    locationMarker.on("dragend",()=>{
-      const p=locationMarker.getLatLng();
-      setCoordinateInputs(p.lat,p.lng,{markManual:true});
-      locationMap.panTo(p);
-      msg("ピンを移動しました。保存するとこの位置が使われます。");
-    });
-  }else{
-    locationMarker.setLatLng([lat,lng]);
-  }
-
+    locationMarker.on("dragend",()=>{const p=locationMarker.getLatLng();setCoordinateInputs(p.lat,p.lng);msg("ピンを移動しました。")});
+  }else locationMarker.setLatLng([lat,lng]);
   locationMap.setView([lat,lng],zoom);
 }
-
 function clearLocationMarker(){
-  if(locationMap && locationMarker){
-    locationMap.removeLayer(locationMarker);
-    locationMarker=null;
-  }
-  if(locationMap){
-    locationMap.setView([35.2218,138.6216],12);
-    setTimeout(()=>locationMap.invalidateSize(),80);
-  }
+  if(locationMap&&locationMarker){locationMap.removeLayer(locationMarker);locationMarker=null}
+  if(locationMap) locationMap.setView([35.2218,138.6216],12);
 }
-
+function normalizeJapaneseAddress(address){
+  return String(address||"").trim()
+    .replace(/[‐‑‒–—―−ー]/g,"-")
+    .replace(/静岡県富士宮市富士宮市/g,"静岡県富士宮市");
+}
+async function geocodeByGSI(query){
+  const q=normalizeJapaneseAddress(query);if(!q)return null;
+  const res=await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q));
+  if(!res.ok)return null;
+  const rows=await res.json();
+  const c=rows?.[0]?.geometry?.coordinates;
+  if(!Array.isArray(c)||c.length<2)return null;
+  const lng=Number(c[0]),lat=Number(c[1]);
+  return validCoord(lat,lng)?{lat,lng,source:"国土地理院"}:null;
+}
+async function geocodeByNominatim(query){
+  const q=String(query||"").trim();if(!q)return null;
+  const u=new URL("https://nominatim.openstreetmap.org/search");
+  u.searchParams.set("format","jsonv2");u.searchParams.set("limit","5");u.searchParams.set("countrycodes","jp");
+  u.searchParams.set("accept-language","ja");u.searchParams.set("q",q);
+  u.searchParams.set("viewbox","138.30,35.55,138.90,34.95");u.searchParams.set("bounded","1");
+  const res=await fetch(u.toString(),{headers:{"Accept":"application/json"}});if(!res.ok)return null;
+  const rows=await res.json();
+  for(const r of rows||[]){const lat=Number(r.lat),lng=Number(r.lon);if(validCoord(lat,lng))return{lat,lng,source:"OpenStreetMap"}}
+  return null;
+}
+async function geocodeAddress(address,name=""){
+  if(!address)return null;
+  try{if(name){const r=await geocodeByNominatim(`${name} ${address}`);if(r)return r}}catch(e){}
+  try{const r=await geocodeByNominatim(address);if(r)return r}catch(e){}
+  try{return await geocodeByGSI(address)}catch(e){return null}
+}
+async function geocodeCurrentAddress({silent=false}={}){
+  const address=$("address").value.trim(),name=$("name").value.trim();
+  if(!address){if(!silent)msg("住所を入力してください");return null}
+  if(!silent)msg("位置候補を取得中…");
+  const r=await geocodeAddress(address,name);
+  if(!r){if(!silent)msg("位置候補を取得できませんでした。地図で指定してください。");return null}
+  setCoordinateInputs(r.lat,r.lng,{manual:false});showLocationMarker(r.lat,r.lng,17);
+  if(!silent)msg(`${r.source}から候補位置を取得しました。ピンを確認してください。`);
+  return r;
+}
 function openGoogleMapsCheck(){
-  const name=$("name").value.trim();
-  const address=$("address").value.trim();
-  const q=`${name} ${address}`.trim();
-  if(!q){
-    msg("名称または住所を入力してください。");
-    return;
-  }
+  const q=`${$("name").value.trim()} ${$("address").value.trim()}`.trim();
+  if(!q){msg("名称または住所を入力してください");return}
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,"_blank","noopener");
 }
 
-
 function updatePhotoToggleUI(){
-  const btn=$("photoToggleBtn");
-  const state=$("photoSettingState");
-  if(!btn || !state) return;
-
-  btn.textContent=photoCardsEnabled ? "全スポット：ON" : "全スポット：OFF";
-  btn.classList.toggle("on",photoCardsEnabled);
-  btn.classList.toggle("off",!photoCardsEnabled);
-  state.textContent=photoCardsEnabled
-    ? "公開画面では、写真が登録されているカードに写真を表示します。"
-    : "公開画面では、すべてのスポットカードの写真を非表示にします。";
+  $("photoToggleBtn").textContent=photoCardsEnabled?"全スポット：ON":"全スポット：OFF";
+  $("photoToggleBtn").classList.toggle("on",photoCardsEnabled);$("photoToggleBtn").classList.toggle("off",!photoCardsEnabled);
+  $("photoSettingState").textContent=photoCardsEnabled?"公開画面で登録済み写真を表示します。":"公開画面で観光スポット写真を非表示にします。";
 }
-
 async function loadPhotoCardSetting(){
-  if(!SpotStore.cloudConfigured()){
-    photoCardsEnabled=localStorage.getItem("fujinomiya_photo_cards_enabled")!=="false";
-    updatePhotoToggleUI();
-    return;
-  }
-
+  if(!SpotStore.cloudConfigured()){photoCardsEnabled=localStorage.getItem("fujinomiya_photo_cards_enabled")!=="false";updatePhotoToggleUI();return}
   const sb=SpotStore.getClient();
-  const {data,error}=await sb
-    .from("app_settings")
-    .select("setting_value")
-    .eq("setting_key","photos_enabled")
-    .maybeSingle();
-
-  if(error){
-    photoCardsEnabled=true;
-    updatePhotoToggleUI();
-    throw new Error("写真表示設定を読み込めません。先に同梱の PHOTO_TOGGLE_SETUP.sql をSupabaseで実行してください。");
-  }
-
-  photoCardsEnabled=data ? data.setting_value !== false : true;
-  updatePhotoToggleUI();
+  const {data,error}=await sb.from("app_settings").select("setting_value").eq("setting_key","photos_enabled").maybeSingle();
+  if(error)throw error;
+  photoCardsEnabled=data?data.setting_value!==false:true;updatePhotoToggleUI();
+}
+async function savePhotoCardSetting(enabled){
+  if(!SpotStore.cloudConfigured()){localStorage.setItem("fujinomiya_photo_cards_enabled",enabled?"true":"false");photoCardsEnabled=enabled;updatePhotoToggleUI();return}
+  const sb=SpotStore.getClient();
+  const {error}=await sb.from("app_settings").upsert({setting_key:"photos_enabled",setting_value:enabled,updated_at:new Date().toISOString()},{onConflict:"setting_key"});
+  if(error)throw error;photoCardsEnabled=enabled;updatePhotoToggleUI();
 }
 
-async function savePhotoCardSetting(enabled){
-  if(!SpotStore.cloudConfigured()){
-    localStorage.setItem("fujinomiya_photo_cards_enabled",enabled ? "true" : "false");
-    photoCardsEnabled=enabled;
-    updatePhotoToggleUI();
-    return;
-  }
+function clearForm(){
+  ["spotId","sourceKey","name","genre","area","address","addressNote","phone","phoneNote","phone2","phone2Note","homepage","description","imageUrl","lat","lng"].forEach(id=>$(id).value="");
+  $("placeType").value=currentType;$("sortOrder").value=allSpots.length+1;$("active").checked=true;
+  $("imageFile").value="";$("preview").style.display="none";$("preview").src="";
+  $("address").dataset.original="";$("lat").dataset.original="";$("lng").dataset.original="";
+  $("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";
+  $("deleteBtn").classList.add("hidden");$("editorTitle").textContent=`${typeLabels[currentType]}を追加`;msg("");clearLocationMarker();
+}
+function openNew(){clearForm();$("editor").classList.add("show");ensureLocationMap();$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
+function openEdit(id){
+  const s=allSpots.find(x=>String(x.id)===String(id));if(!s)return;
+  $("spotId").value=s.id||"";$("sourceKey").value=s.source_key||"";$("placeType").value=s.place_type||currentType;
+  $("name").value=s.name||"";$("genre").value=s.genre||"";$("area").value=s.area||"";
+  $("address").value=s.address||"";$("addressNote").value=s.address_note||"";$("address").dataset.original=s.address||"";
+  $("phone").value=s.phone||"";$("phoneNote").value=s.phone_note||"";$("phone2").value=s.phone2||"";$("phone2Note").value=s.phone2_note||"";
+  $("homepage").value=s.homepage||"";$("description").value=s.description||"";$("imageUrl").value=s.image_url||"";
+  $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("lat").dataset.original=s.lat??"";$("lng").dataset.original=s.lng??"";
+  $("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
+  if(s.image_url){$("preview").src=s.image_url;$("preview").style.display="block"}else $("preview").style.display="none";
+  $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent=`${typeLabels[s.place_type||currentType]}を編集`;
+  $("editor").classList.add("show");
+  if(validCoord(s.lat,s.lng))showLocationMarker(s.lat,s.lng,17);else{ensureLocationMap();clearLocationMarker()}
+  $("editor").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function filteredAdmin(){
+  const q=$("listSearch").value.trim().toLowerCase();
+  return allSpots.filter(s=>!q||`${s.name} ${s.genre} ${s.address} ${s.address_note} ${s.phone} ${s.phone_note} ${s.phone2} ${s.description}`.toLowerCase().includes(q));
+}
+function renderList(){
+  const list=filteredAdmin(),pages=Math.max(1,Math.ceil(list.length/ADMIN_PAGE_SIZE));
+  if(adminPage>pages)adminPage=pages;if(adminPage<1)adminPage=1;
+  const start=(adminPage-1)*ADMIN_PAGE_SIZE,pageData=list.slice(start,start+ADMIN_PAGE_SIZE);
+  $("spotCount").textContent=`${list.length}件`;
+  $("listTitle").textContent=`登録済み${typeLabels[currentType]}`;
+  $("adminPageInfo").textContent=`${adminPage} / ${pages}`;
+  $("adminPrev").disabled=adminPage<=1;$("adminNext").disabled=adminPage>=pages;
+  $("spotList").innerHTML=pageData.map(s=>`<div class="item">
+    ${s.image_url?`<img class="thumb" src="${esc(s.image_url)}" alt="" onerror="this.outerHTML='<div class=&quot;thumb&quot;>📍</div>'">`:`<div class="thumb">📍</div>`}
+    <div><h3>${esc(s.name)}</h3><div class="meta"><span class="type-chip">${esc(typeLabels[s.place_type]||s.place_type)}</span>${esc(s.genre||"")}<br>${esc(s.address||"")}${s.phone?`<br>☎ ${esc(s.phone)}`:""}${s.active===false?"<br>非公開":""}</div></div>
+    <button class="secondary" data-edit="${esc(s.id)}">編集</button>
+  </div>`).join("");
+  $("spotList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
+}
+async function reload(){
+  try{
+    allSpots=await SpotStore.list({includeInactive:true,placeType:currentType});
+    renderList();
+  }catch(e){alert("読み込みエラー: "+e.message)}
+}
+async function save(){
+  if(!$("name").value.trim()){msg("名称を入力してください");return}
+  $("saveBtn").disabled=true;msg("保存中…");
+  try{
+    let imageUrl=$("imageUrl").value.trim();
+    const file=$("imageFile").files[0];if(file)imageUrl=await SpotStore.uploadImage(file,imageUrl);
+    const addressNow=$("address").value.trim(),addressBefore=($("address").dataset.original||"").trim();
+    const addressChanged=addressNow!==addressBefore;
+    const coordsBlank=!$("lat").value||!$("lng").value;
+    const coordsManuallyChanged=$("lat").dataset.mapAdjusted==="true"||$("lng").dataset.mapAdjusted==="true"||
+      String($("lat").value)!==String($("lat").dataset.original||"")||String($("lng").value)!==String($("lng").dataset.original||"");
+    if(addressNow&&!coordsManuallyChanged&&(addressChanged||coordsBlank)){
+      const geo=await geocodeCurrentAddress({silent:true});
+      if(addressChanged&&!geo){$("lat").value="";$("lng").value=""}
+    }
+    const s={
+      id:$("spotId").value||("local-"+Date.now()),
+      source_key:$("sourceKey").value||"",
+      place_type:$("placeType").value,
+      name:$("name").value.trim(),genre:$("genre").value.trim(),area:$("area").value.trim(),
+      address:$("address").value.trim(),address_note:$("addressNote").value.trim(),
+      phone:$("phone").value.trim(),phone_note:$("phoneNote").value.trim(),
+      phone2:$("phone2").value.trim(),phone2_note:$("phone2Note").value.trim(),
+      homepage:$("homepage").value.trim(),description:$("description").value.trim(),image_url:imageUrl,
+      lat:$("lat").value,lng:$("lng").value,sort_order:$("sortOrder").value,active:$("active").checked
+    };
+    await SpotStore.upsert(s);
+    msg("保存しました");
+    currentType=s.place_type;
+    await reload();
+    setTimeout(()=>$("editor").classList.remove("show"),350);
+  }catch(e){msg("保存できませんでした: "+e.message)}
+  finally{$("saveBtn").disabled=false}
+}
+async function del(){
+  const id=$("spotId").value;if(!id)return;
+  if(!confirm("この施設を削除しますか？"))return;
+  try{await SpotStore.remove(id);$("editor").classList.remove("show");await reload()}catch(e){msg("削除できませんでした: "+e.message)}
+}
 
-  const sb=SpotStore.getClient();
-  const {error}=await sb
-    .from("app_settings")
-    .upsert({
-      setting_key:"photos_enabled",
-      setting_value:enabled,
+function seedPayload(seed,existing){
+  const clean={...seed};
+  delete clean.aliases;delete clean.preserve_existing;
+  if(!existing)return clean;
+  if(seed.preserve_existing){
+    return {...clean,...existing,id:existing.id,source_key:seed.source_key,place_type:seed.place_type};
+  }
+  return {
+    ...existing,...clean,id:existing.id,
+    image_url:existing.image_url||clean.image_url||"",
+    lat:existing.lat??clean.lat,lng:existing.lng??clean.lng,
+    active:existing.active!==false,
+    homepage:existing.homepage||clean.homepage||""
+  };
+}
+function sameNameAddress(a,b){
+  return String(a.name||"").trim()===String(b.name||"").trim() &&
+         String(a.address||"").replace(/^静岡県富士宮市/,"").trim()===String(b.address||"").replace(/^静岡県富士宮市/,"").trim();
+}
+async function migrateCurrentCatalog(){
+  if(!SpotStore.cloudConfigured())throw new Error("Supabaseクラウド接続が必要です");
+  const seed=window.CLOUD_SEED_DATA;if(!seed)throw new Error("cloud-seed-data.js が読み込まれていません");
+  $("migrateBtn").disabled=true;$("migrateProgress").textContent="既存クラウドデータを確認中…";
+  try{
+    const existing=await SpotStore.list({includeInactive:true});
+    const bySource=new Map(existing.filter(x=>x.source_key).map(x=>[x.source_key,x]));
+    const used=new Set();
+    const prepared=[];
+
+    for(const a of seed.attractions){
+      let old=bySource.get(a.source_key)||null;
+      if(!old){
+        const names=new Set([a.name,...(a.aliases||[])]);
+        old=existing.find(x=>x.place_type==="attraction"&&!used.has(x.id)&&names.has(x.name))||null;
+      }
+      if(old)used.add(old.id);
+      prepared.push(seedPayload(a,old));
+    }
+
+    for(const r of seed.restaurants){
+      let old=bySource.get(r.source_key)||existing.find(x=>x.place_type==="restaurant"&&sameNameAddress(x,r))||null;
+      prepared.push(seedPayload(r,old));
+    }
+    for(const a of seed.accommodations){
+      let old=bySource.get(a.source_key)||existing.find(x=>x.place_type==="accommodation"&&sameNameAddress(x,a))||null;
+      prepared.push(seedPayload(a,old));
+    }
+
+    await SpotStore.bulkUpsert(prepared,{chunkSize:80,onProgress:(done,total)=>{
+      $("migrateProgress").textContent=`クラウドへ登録中… ${done} / ${total}`;
+    }});
+
+    const sb=SpotStore.getClient();
+    await sb.from("app_settings").upsert({
+      setting_key:"cloud_catalog_v2",
+      setting_value:{completed:true,counts:seed.counts,updated_at:new Date().toISOString()},
       updated_at:new Date().toISOString()
     },{onConflict:"setting_key"});
 
-  if(error) throw error;
-
-  photoCardsEnabled=enabled;
-  updatePhotoToggleUI();
+    $("migrateProgress").textContent=`完了：観光 ${seed.counts.attraction}件 / 飲食 ${seed.counts.restaurant}件 / 宿泊 ${seed.counts.accommodation}件を登録・更新しました。`;
+    await reload();
+    alert("クラウド登録・更新が完了しました。公開ページはこれ以降、Supabaseのデータを表示します。");
+  }finally{$("migrateBtn").disabled=false}
 }
 
-
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-
-function normalizeJapaneseAddress(value){
-  return String(value||"")
-    .normalize("NFKC")
-    .replace(/[‐‑‒–—―−ーｰ]/g,"-")
-    .replace(/\s+/g,"")
-    .trim();
+function selectType(type){
+  currentType=type;adminPage=1;$("listSearch").value="";
+  document.querySelectorAll(".type-tab").forEach(b=>b.classList.toggle("active",b.dataset.type===type));
+  $("bulkGeocodeBtn").textContent=`未登録座標を一括取得（${typeLabels[type]}）`;
+  reload();
 }
 
-
-async function geocodeByGSI(query){
-  const q=normalizeJapaneseAddress(query);
-  if(!q) return null;
-
-  const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q);
-  const res=await fetch(url,{headers:{"Accept":"application/json"}});
-  if(!res.ok) return null;
-
-  const rows=await res.json();
-  if(!Array.isArray(rows) || !rows.length) return null;
-
-  const coords=rows[0]?.geometry?.coordinates;
-  if(!Array.isArray(coords) || coords.length<2) return null;
-
-  const lng=Number(coords[0]);
-  const lat=Number(coords[1]);
-  if(!validCoord(lat,lng)) return null;
-
-  return {
-    lat,lng,
-    source:"国土地理院（住所の代表点の場合があります）",
-    display_name:rows[0]?.properties?.title || q
-  };
-}
-
-async function geocodeByNominatim(query){
-  const q=String(query||"").trim();
-  if(!q) return null;
-
-  const url=new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("format","jsonv2");
-  url.searchParams.set("limit","5");
-  url.searchParams.set("countrycodes","jp");
-  url.searchParams.set("accept-language","ja");
-  url.searchParams.set("q",q);
-
-  // 富士宮周辺を優先し、同名施設の遠方誤ヒットを減らす
-  url.searchParams.set("viewbox","138.30,35.55,138.90,34.95");
-  url.searchParams.set("bounded","1");
-
-  const res=await fetch(url.toString(),{headers:{"Accept":"application/json"}});
-  if(!res.ok) return null;
-
-  const rows=await res.json();
-  if(!Array.isArray(rows) || !rows.length) return null;
-
-  for(const row of rows){
-    const lat=Number(row.lat);
-    const lng=Number(row.lon);
-    if(validCoord(lat,lng)){
-      return {
-        lat,lng,
-        source:"OpenStreetMap（施設名＋住所）",
-        display_name:row.display_name||q
-      };
-    }
-  }
-  return null;
-}
-
-async function geocodeAddress(address,name=""){
-  const normalized=normalizeJapaneseAddress(address);
-  if(!normalized) return null;
-
-  // 1. 施設名＋住所を最優先。施設そのものの位置を拾いやすい。
-  if(name){
-    try{
-      const byPlace=await geocodeByNominatim(`${name} ${address}`);
-      if(byPlace) return byPlace;
-    }catch(e){}
-  }
-
-  // 2. 住所だけで検索
-  try{
-    const byAddress=await geocodeByNominatim(address);
-    if(byAddress) return byAddress;
-  }catch(e){}
-
-  // 3. 最後に国土地理院。番地によっては地域代表点になるため要確認。
-  try{
-    return await geocodeByGSI(normalized);
-  }catch(e){
-    return null;
-  }
-}
-
-async function geocodeCurrentAddress({silent=false}={}){
-  const address=$("address").value.trim();
-  const name=$("name").value.trim();
-
-  if(!address){
-    if(!silent) msg("住所を入力してください");
-    return null;
-  }
-
-  if(!silent) msg("施設名と住所から位置候補を取得中…");
-
-  const result=await geocodeAddress(address,name);
-
-  if(!result){
-    if(!silent) msg("位置候補を取得できませんでした。Googleマップで確認し、地図をタップして位置を指定してください。");
-    return null;
-  }
-
-  setCoordinateInputs(result.lat,result.lng,{markManual:false});
-  showLocationMarker(result.lat,result.lng,17);
-
-  if(!silent){
-    msg(`${result.source}から候補位置を取得しました。地図上のピンが実際の施設位置と合っているか確認してください。`);
-  }
-  return result;
-}
-function clearForm(){
- $("spotId").value="";$("name").value="";$("genre").value="";$("address").value="";$("address").dataset.original="";$("area").value="";
- $("phone").value="";$("homepage").value="";$("description").value="";$("imageUrl").value="";
- $("imageFile").value="";$("lat").value="";$("lng").value="";$("lat").dataset.original="";$("lng").dataset.original="";$("sortOrder").value=(allSpots.length+1);
- $("active").checked=true;$("preview").style.display="none";$("preview").src="";$("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";clearLocationMarker();
- $("deleteBtn").classList.add("hidden");$("editorTitle").textContent="スポットを追加";msg("");
-}
-function openNew(){clearForm();$("editor").classList.add("show");ensureLocationMap();setTimeout(()=>locationMap&&locationMap.invalidateSize(),100);$("editor").scrollIntoView({behavior:"smooth",block:"start"})}
-function openEdit(id){
- const s=allSpots.find(x=>String(x.id)===String(id)); if(!s)return;
- $("spotId").value=s.id;$("name").value=s.name||"";$("genre").value=s.genre||"";$("address").value=s.address||"";$("address").dataset.original=s.address||"";$("area").value=s.area||"";
- $("phone").value=s.phone||"";$("homepage").value=s.homepage||"";$("description").value=s.description||"";$("imageUrl").value=s.image_url||"";
- $("lat").value=s.lat??"";$("lng").value=s.lng??"";$("lat").dataset.original=s.lat??"";$("lng").dataset.original=s.lng??"";$("sortOrder").value=s.sort_order??0;$("active").checked=s.active!==false;
- if(s.image_url){$("preview").src=s.image_url;$("preview").style.display="block"}else{$("preview").style.display="none"}
- $("deleteBtn").classList.remove("hidden");$("editorTitle").textContent="スポットを編集";$("editor").classList.add("show");
- $("lat").dataset.mapAdjusted="";$("lng").dataset.mapAdjusted="";
- const currentLat=Number(s.lat),currentLng=Number(s.lng);
- if(validCoord(currentLat,currentLng)) showLocationMarker(currentLat,currentLng,17); else {ensureLocationMap();clearLocationMarker();}
- setTimeout(()=>locationMap&&locationMap.invalidateSize(),100);
- $("editor").scrollIntoView({behavior:"smooth",block:"start"});
-}
-function renderList(){
- const q=$("listSearch").value.trim().toLowerCase();
- const list=allSpots.filter(s=>!q||`${s.name} ${s.genre} ${s.address} ${s.phone} ${s.homepage} ${s.description}`.toLowerCase().includes(q));
- $("spotCount").textContent=`${list.length}件`;
- $("spotList").innerHTML=list.map(s=>`<div class="item">
-   ${s.image_url?`<img class="thumb" src="${esc(s.image_url)}" alt="" onerror="this.outerHTML='<div class=&quot;thumb&quot;>📍</div>'">`:`<div class="thumb">📍</div>`}
-   <div><h3>${esc(s.name)}</h3><div class="meta">${esc(s.genre)}<br>${esc(s.address)}${s.active===false?"<br>非公開":""}</div></div>
-   <button class="secondary" data-edit="${esc(s.id)}">編集</button>
- </div>`).join("");
- $("spotList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
-}
-async function reload(){
- try{allSpots=await SpotStore.list({includeInactive:true});renderList()}catch(e){alert("読み込みエラー: "+e.message)}
-}
-async function save(){
- if(!$("name").value.trim()){msg("名称を入力してください");return}
- $("saveBtn").disabled=true;msg("保存中…");
- try{
-   let imageUrl=$("imageUrl").value.trim();
-   const file=$("imageFile").files[0];
-   if(file) imageUrl=await SpotStore.uploadImage(file,imageUrl);
-
-   // 住所が新規登録・変更された場合は自動で再取得。
-   // 緯度経度を手入力で変更した場合は手入力を優先。
-   const addressNow=$("address").value.trim();
-   const addressBefore=($("address").dataset.original||"").trim();
-   const addressChanged=addressNow!==addressBefore;
-   const coordsBlank=!$("lat").value || !$("lng").value;
-   const coordsManuallyChanged=
-     $("lat").dataset.mapAdjusted==="true" ||
-     $("lng").dataset.mapAdjusted==="true" ||
-     String($("lat").value)!==String($("lat").dataset.original||"") ||
-     String($("lng").value)!==String($("lng").dataset.original||"");
-
-   if(addressNow && !coordsManuallyChanged && (addressChanged || coordsBlank)){
-     msg("住所から緯度経度を自動取得中…");
-     const geo=await geocodeCurrentAddress({silent:true});
-
-     // 住所が変わったのに取得できなかった場合、古い座標は残さない
-     if(addressChanged && !geo){
-       $("lat").value="";
-       $("lng").value="";
-       msg("住所は保存しますが、緯度経度を特定できませんでした。必要なら手入力してください。");
-     }
-   }
-
-   const spot={
-     id:$("spotId").value||("local-"+Date.now()),
-     name:$("name").value.trim(),genre:$("genre").value.trim(),address:$("address").value.trim(),area:$("area").value.trim(),
-     phone:$("phone").value.trim(),homepage:$("homepage").value.trim(),description:$("description").value.trim(),
-     image_url:imageUrl,lat:$("lat").value,lng:$("lng").value,sort_order:$("sortOrder").value,active:$("active").checked
-   };
-   await SpotStore.upsert(spot);msg("保存しました");await reload();setTimeout(()=>{$("editor").classList.remove("show")},500);
- }catch(e){msg("保存できませんでした: "+e.message)}
- finally{$("saveBtn").disabled=false}
-}
-async function del(){
- const id=$("spotId").value;if(!id)return;
- if(!confirm("この観光スポットを削除しますか？"))return;
- try{await SpotStore.remove(id);$("editor").classList.remove("show");await reload()}catch(e){msg("削除できませんでした: "+e.message)}
-}
 async function init(){
- const cloud=SpotStore.cloudConfigured();
- $("modeBadge").textContent=cloud?"Supabaseクラウド":"この端末のみ";
- $("localNotice").classList.toggle("hidden",cloud);
- $("resetLocalBtn").classList.toggle("hidden",cloud);
- $("seedBtn").classList.toggle("hidden",!cloud);
-
- if(cloud){
-   const session=await SpotStore.getSession();
-   if(!session){$("loginPanel").classList.remove("hidden");return}
-   try{
-     if(!(await SpotStore.isAdmin())){ $("loginPanel").classList.remove("hidden");$("loginMsg").textContent="このアカウントには管理者権限がありません。";return; }
-   }catch(e){$("loginPanel").classList.remove("hidden");$("loginMsg").textContent=e.message;return}
-   $("logoutBtn").classList.remove("hidden");
- }
- $("adminArea").classList.remove("hidden");
- try{
-   await loadPhotoCardSetting();
- }catch(e){
-   $("photoSettingState").textContent=e.message;
- }
- await reload();
+  const cloud=SpotStore.cloudConfigured();
+  $("modeBadge").textContent=cloud?"Supabaseクラウド":"この端末のみ";
+  $("localNotice").classList.toggle("hidden",cloud);
+  $("migrationPanel").classList.toggle("hidden",!cloud);
+  if(cloud){
+    const session=await SpotStore.getSession();
+    if(!session){$("loginPanel").classList.remove("hidden");return}
+    try{
+      if(!(await SpotStore.isAdmin())){ $("loginPanel").classList.remove("hidden");$("loginMsg").textContent="このアカウントには管理者権限がありません。";return}
+    }catch(e){$("loginPanel").classList.remove("hidden");$("loginMsg").textContent=e.message;return}
+    $("logoutBtn").classList.remove("hidden");
+  }
+  $("adminArea").classList.remove("hidden");
+  try{await loadPhotoCardSetting()}catch(e){$("photoSettingState").textContent="写真表示設定を読み込めません。CLOUD_SCHEMA_V2.sql を先に実行してください。"}
+  await reload();
 }
+
 $("loginBtn").onclick=async()=>{
- $("loginMsg").textContent="ログイン中…";
- try{
-   await SpotStore.login($("loginEmail").value.trim(),$("loginPassword").value);
-   if(!(await SpotStore.isAdmin())){await SpotStore.logout();throw new Error("このアカウントには管理者権限がありません")}
-   location.reload();
- }catch(e){$("loginMsg").textContent="ログインできません: "+e.message}
+  $("loginMsg").textContent="ログイン中…";
+  try{
+    await SpotStore.login($("loginEmail").value.trim(),$("loginPassword").value);
+    if(!(await SpotStore.isAdmin())){await SpotStore.logout();throw new Error("このアカウントには管理者権限がありません")}
+    location.reload();
+  }catch(e){$("loginMsg").textContent="ログインできません: "+e.message}
 };
 $("logoutBtn").onclick=async()=>{await SpotStore.logout();location.reload()};
-$("newBtn").onclick=openNew;$("cancelBtn").onclick=()=>{$("editor").classList.remove("show")};$("saveBtn").onclick=save;$("deleteBtn").onclick=del;
-$("listSearch").addEventListener("input",renderList);
+document.querySelectorAll(".type-tab").forEach(b=>b.onclick=()=>selectType(b.dataset.type));
+$("newBtn").onclick=openNew;$("cancelBtn").onclick=()=>$("editor").classList.remove("show");$("saveBtn").onclick=save;$("deleteBtn").onclick=del;
+$("listSearch").addEventListener("input",()=>{adminPage=1;renderList()});
+$("adminPrev").onclick=()=>{if(adminPage>1){adminPage--;renderList()}};
+$("adminNext").onclick=()=>{const pages=Math.ceil(filteredAdmin().length/ADMIN_PAGE_SIZE);if(adminPage<pages){adminPage++;renderList()}};
 $("imageUrl").addEventListener("input",()=>{const v=$("imageUrl").value.trim();if(v){$("preview").src=v;$("preview").style.display="block"}else $("preview").style.display="none"});
 $("imageFile").addEventListener("change",()=>{const f=$("imageFile").files[0];if(f){$("preview").src=URL.createObjectURL(f);$("preview").style.display="block"}});
-
-
-$("geocodeBtn").onclick=()=>geocodeCurrentAddress();
-$("googleMapsCheckBtn").onclick=openGoogleMapsCheck;
-
-["lat","lng"].forEach(id=>{
-  $(id).addEventListener("change",()=>{
-    const lat=Number($("lat").value),lng=Number($("lng").value);
-    if(validCoord(lat,lng)){
-      $("lat").dataset.mapAdjusted="true";
-      $("lng").dataset.mapAdjusted="true";
-      showLocationMarker(lat,lng,17);
-    }
-  });
-});
-
-
+$("geocodeBtn").onclick=()=>geocodeCurrentAddress();$("googleMapsCheckBtn").onclick=openGoogleMapsCheck;
+["lat","lng"].forEach(id=>$(id).addEventListener("change",()=>{const lat=Number($("lat").value),lng=Number($("lng").value);if(validCoord(lat,lng)){setCoordinateInputs(lat,lng);showLocationMarker(lat,lng,17)}}));
+$("migrateBtn").onclick=async()=>{
+  if(!confirm("現在載っている観光スポット・飲食店・宿泊施設をSupabaseへ登録・更新しますか？"))return;
+  try{await migrateCurrentCatalog()}catch(e){$("migrateProgress").textContent="エラー: "+e.message;alert("登録できませんでした: "+e.message)}
+};
+$("photoToggleBtn").onclick=async()=>{
+  const next=!photoCardsEnabled;
+  if(!confirm(next?"観光スポット写真を表示しますか？":"観光スポット写真を非表示にしますか？"))return;
+  try{await savePhotoCardSetting(next)}catch(e){alert("変更できません: "+e.message)}
+};
 $("bulkGeocodeBtn").onclick=async()=>{
-  if(!allSpots.length) return;
-  if(!confirm("住所が登録済みで、緯度経度が未登録のスポットを順番に取得します。実行しますか？")) return;
-
-  $("bulkGeocodeBtn").disabled=true;
-  let ok=0, ng=0, skipped=0;
-
+  if(!allSpots.length)return;
+  if(!confirm(`現在表示中の${typeLabels[currentType]}で、緯度経度が未登録の施設を順番に取得します。件数が多い場合は時間がかかります。実行しますか？`))return;
+  $("bulkGeocodeBtn").disabled=true;let ok=0,ng=0,skipped=0;
   try{
     for(let i=0;i<allSpots.length;i++){
       const s=allSpots[i];
-
-      if(!s.address || (s.lat != null && s.lng != null)){
-        skipped++;
-        continue;
-      }
-
+      if(!s.address||(s.lat!=null&&s.lng!=null)){skipped++;continue}
       $("bulkGeocodeBtn").textContent=`取得中 ${i+1}/${allSpots.length}`;
-
-      try{
-        const r=await geocodeAddress(s.address,s.name);
-        if(r){
-          await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});
-          ok++;
-        }else{
-          ng++;
-        }
-      }catch(e){
-        ng++;
-      }
-
-      // 公開ジオコーディングサービスへの連続アクセスを避ける
-      await sleep(700);
+      try{const r=await geocodeAddress(s.address,s.name);if(r){await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});ok++}else ng++}catch(e){ng++}
+      await sleep(600);
     }
-
-    await reload();
-    alert(`完了しました。\n成功: ${ok}件\n取得できず: ${ng}件\n対象外: ${skipped}件`);
-  }finally{
-    $("bulkGeocodeBtn").disabled=false;
-    $("bulkGeocodeBtn").textContent="未登録座標を一括取得（目安）";
-  }
+    await reload();alert(`完了しました。\n成功: ${ok}件\n取得できず: ${ng}件\n対象外: ${skipped}件`);
+  }finally{$("bulkGeocodeBtn").disabled=false;$("bulkGeocodeBtn").textContent=`未登録座標を一括取得（${typeLabels[currentType]}）`}
 };
-
-
-$("photoToggleBtn").onclick=async()=>{
-  const btn=$("photoToggleBtn");
-  const next=!photoCardsEnabled;
-  const label=next ? "全スポットのカード写真を表示しますか？" : "全スポットのカード写真を非表示にしますか？";
-  if(!confirm(label)) return;
-
-  btn.disabled=true;
-  try{
-    await savePhotoCardSetting(next);
-    alert(next ? "全スポットのカード写真をONにしました。" : "全スポットのカード写真をOFFにしました。");
-  }catch(e){
-    alert("設定を変更できませんでした: "+e.message);
-  }finally{
-    btn.disabled=false;
-  }
-};
-
-$("resetLocalBtn").onclick=()=>{if(confirm("この端末の編集内容を消して初期35件に戻しますか？")){SpotStore.resetLocal();reload()}};
-$("seedBtn").onclick=async()=>{if(!confirm("初期35件をクラウドDBへ追加しますか？"))return;try{await SpotStore.seedCloud();await reload();alert("登録しました")}catch(e){alert("登録できません: "+e.message)}};
 init();
 </script>
 </body>
