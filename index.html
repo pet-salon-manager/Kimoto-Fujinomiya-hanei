@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="ふじのみや旅ナビ">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <title>ふじのみや旅ナビ</title>
 <style>
 :root{--green:#0b7a5c;--green2:#0d5f4b;--ink:#15332b;--line:#dfe9e4;--radius:22px}
@@ -320,28 +321,6 @@ footer a{color:#fff}
 .leaflet-zoom-animated{will-change:transform}
 
 
-/* iPhone / touch map interaction fix */
-#facilityMap,
-#facilityMap.leaflet-container,
-.map-stage{
- -webkit-user-select:none!important;
- user-select:none!important;
- -webkit-touch-callout:none!important;
- overscroll-behavior:contain!important;
-}
-#facilityMap.leaflet-container{
- touch-action:none!important;
- -ms-touch-action:none!important;
- cursor:grab;
-}
-#facilityMap.leaflet-container:active{cursor:grabbing}
-#facilityMap .leaflet-map-pane,
-#facilityMap .leaflet-tile-pane,
-#facilityMap .leaflet-marker-pane{
- touch-action:none!important;
-}
-
-
 /* Swipe page navigation */
 .toolbar{
  position:relative;
@@ -379,6 +358,20 @@ footer a{color:#fff}
 .toolbar.swiping-right{transform:translateX(8px)}
 .toolbar{
  transition:transform .12s ease;
+}
+
+
+/* Map gesture reliability */
+#facilityMap{
+ -webkit-user-select:none;
+ user-select:none;
+ -webkit-touch-callout:none;
+}
+.map-stage{
+ overscroll-behavior:contain;
+}
+#facilityMap .leaflet-control-zoom a{
+ touch-action:manipulation;
 }
 
 </style>
@@ -477,46 +470,27 @@ function mapCurrentIcon(){
 }
 const FUJINOMIYA_CENTER=[35.245,138.615];
 const FUJINOMIYA_MAX_BOUNDS=L.latLngBounds(
-  [34.98,138.30],
-  [35.56,138.90]
+  [34.85,138.10],
+  [35.72,139.05]
 );
 
 function forceMapResize(){
  if(!appMap) return;
- const mapEl=document.getElementById("facilityMap");
- if(mapEl){
-   mapEl.style.width="100%";
-   mapEl.style.height="100%";
- }
  const run=()=>{
-   try{
-     appMap.invalidateSize({pan:false,animate:false});
-     appMap.eachLayer(layer=>{
-       if(layer&&typeof layer.redraw==="function"){
-         try{layer.redraw()}catch(e){}
-       }
-     });
-   }catch(e){}
+   try{appMap.invalidateSize({pan:false,animate:false});}catch(e){}
  };
- requestAnimationFrame(()=>{
-   run();
-   requestAnimationFrame(run);
- });
- setTimeout(run,60);
- setTimeout(run,160);
- setTimeout(run,320);
- setTimeout(run,650);
- setTimeout(run,1000);
+ requestAnimationFrame(run);
+ setTimeout(run,120);
 }
 
 function ensureFacilityMap(){
  if(appMap) return appMap;
  appMap=L.map("facilityMap",{
    zoomControl:true,
-   minZoom:10,
-   maxZoom:18,
+   minZoom:9,
+   maxZoom:19,
    maxBounds:FUJINOMIYA_MAX_BOUNDS,
-   maxBoundsViscosity:0.55,
+   maxBoundsViscosity:0.15,
    worldCopyJump:false,
    dragging:true,
    touchZoom:true,
@@ -525,14 +499,16 @@ function ensureFacilityMap(){
    boxZoom:false,
    keyboard:false,
    inertia:true,
-   inertiaDeceleration:2400,
-   inertiaMaxSpeed:1600,
-   easeLinearity:0.22
+   inertiaDeceleration:3000,
+   inertiaMaxSpeed:1800,
+   easeLinearity:0.25,
+   zoomSnap:0.5,
+   zoomDelta:0.5
  }).setView(FUJINOMIYA_CENTER,11);
 
  const tileLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-   minZoom:10,
-   maxZoom:18,
+   minZoom:9,
+   maxZoom:19,
    tileSize:256,
    noWrap:true,
    keepBuffer:4,
@@ -541,15 +517,10 @@ function ensureFacilityMap(){
    crossOrigin:true,
    attribution:"&copy; OpenStreetMap contributors"
  }).addTo(appMap);
- tileLayer.on("tileload",()=>forceMapResize());
- tileLayer.on("load",()=>forceMapResize());
 
  appMap.setMaxBounds(FUJINOMIYA_MAX_BOUNDS);
  mapFacilityLayer=L.layerGroup().addTo(appMap);
 
- appMap.on("drag",()=>{
-   appMap.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:false});
- });
 
  forceMapResize();
  return appMap;
@@ -706,12 +677,6 @@ document.getElementById("mapToggleBtn").onclick=()=>{
 };
 
 
-const mapTouchEl=document.getElementById("facilityMap");
-["touchstart","touchmove","pointerdown","pointermove"].forEach(type=>{
- mapTouchEl.addEventListener(type,e=>{
-   if(mapVisible) e.stopPropagation();
- },{passive:true});
-});
 
 document.getElementById("mapCurrentBtn").onclick=()=>{
  if(!mapVisible) return;
