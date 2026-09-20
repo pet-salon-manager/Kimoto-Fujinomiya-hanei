@@ -117,7 +117,7 @@ label{font-size:12px;font-weight:800;display:block;margin-bottom:5px}
     <section class="panel">
       <div class="row">
         <button id="newBtn" class="primary">＋ 新しく追加</button>
-        <button id="bulkGeocodeBtn" class="secondary">未登録座標を一括取得（表示中）</button>
+        <button id="bulkGeocodeBtn" class="secondary">全施設の未登録座標を取得・保存</button>
         <input id="listSearch" class="grow" type="search" placeholder="名称・住所・電話番号・説明文で検索">
       </div>
     </section>
@@ -214,7 +214,7 @@ label{font-size:12px;font-weight:800;display:block;margin-bottom:5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
-<script src="./data-store-v3.js?v=20260920-2"></script>
+<script src="./data-store-v3.js?v=20260920-3"></script>
 <script src="./cloud-seed-data.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -266,9 +266,62 @@ function normalizeJapaneseAddress(address){
     .replace(/[‐‑‒–—―−ー]/g,"-")
     .replace(/静岡県富士宮市富士宮市/g,"静岡県富士宮市");
 }
+function addressCandidates(address){
+  let a=normalizeJapaneseAddress(address)
+    .replace(/[（(][^）)]*[）)]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+
+  if(!a) return [];
+
+  if(!a.startsWith("静岡県")){
+    if(a.startsWith("富士宮市")) a="静岡県"+a;
+    else a="静岡県富士宮市"+a;
+  }
+
+  const list=[a];
+
+  // 建物名・階数などが住所の後ろに続く場合は、番地までの候補も試す。
+  const m=a.match(/^(静岡県富士宮市.+?\d+(?:-\d+){0,3})/);
+  if(m && m[1]!==a) list.push(m[1]);
+
+  // 「○○内」「○○駐車場」等の補足を除いた候補。
+  const simplified=a
+    .replace(/\s+(?:[^0-9]+(?:内|1F|2F|3F|階).*)$/,"")
+    .trim();
+  if(simplified && !list.includes(simplified)) list.push(simplified);
+
+  return [...new Set(list)];
+}
+
 async function geocodeByGSI(query){
-  const q=normalizeJapaneseAddress(query);if(!q)return null;
-  const res=await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q));
+  const q=normalizeJapaneseAddress(query);
+  if(!q)return null;
+
+  const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(q);
+
+  // Supabaseクラウド接続中は、ブラウザから直接ではなく
+  // Supabase RPCを経由して国土地理院へ問い合わせる。
+  if(SpotStore.cloudConfigured()){
+    const sb=SpotStore.getClient();
+    const {data,error}=await sb.rpc("geocode_gsi_proxy",{p_url:url});
+    if(error) throw error;
+
+    const rows=Array.isArray(data)?data:[];
+    const c=rows?.[0]?.geometry?.coordinates;
+    if(!Array.isArray(c)||c.length<2)return null;
+
+    const lng=Number(c[0]),lat=Number(c[1]);
+    if(!validCoord(lat,lng))return null;
+
+    // 富士宮市・富士山周辺から大きく外れる候補は採用しない。
+    if(lat<35.02||lat>35.52||lng<138.38||lng>138.82)return null;
+
+    return {lat,lng,source:"国土地理院（Supabase経由）"};
+  }
+
+  // ローカルモード時だけブラウザ直アクセスを試す。
+  const res=await fetch(url);
   if(!res.ok)return null;
   const rows=await res.json();
   const c=rows?.[0]?.geometry?.coordinates;
@@ -276,6 +329,7 @@ async function geocodeByGSI(query){
   const lng=Number(c[0]),lat=Number(c[1]);
   return validCoord(lat,lng)?{lat,lng,source:"国土地理院"}:null;
 }
+
 async function geocodeByNominatim(query){
   const q=String(query||"").trim();if(!q)return null;
   const u=new URL("https://nominatim.openstreetmap.org/search");
@@ -289,10 +343,32 @@ async function geocodeByNominatim(query){
 }
 async function geocodeAddress(address,name=""){
   if(!address)return null;
-  try{if(name){const r=await geocodeByNominatim(`${name} ${address}`);if(r)return r}}catch(e){}
-  try{const r=await geocodeByNominatim(address);if(r)return r}catch(e){}
-  try{return await geocodeByGSI(address)}catch(e){return null}
+
+  for(const candidate of addressCandidates(address)){
+    try{
+      const r=await geocodeByGSI(candidate);
+      if(r)return r;
+    }catch(e){
+      // RPCが未設定なら、呼び出し元へ分かるようにエラーを返す
+      if(SpotStore.cloudConfigured()) throw e;
+    }
+  }
+
+  // 単発編集時の補助としてOpenStreetMapも残す。
+  try{
+    if(name){
+      const r=await geocodeByNominatim(`${name} ${address}`);
+      if(r)return r;
+    }
+  }catch(e){}
+  try{
+    const r=await geocodeByNominatim(address);
+    if(r)return r;
+  }catch(e){}
+
+  return null;
 }
+
 async function geocodeCurrentAddress({silent=false}={}){
   const address=$("address").value.trim(),name=$("name").value.trim();
   if(!address){if(!silent)msg("住所を入力してください");return null}
@@ -488,7 +564,7 @@ async function migrateCurrentCatalog(){
 function selectType(type){
   currentType=type;adminPage=1;$("listSearch").value="";
   document.querySelectorAll(".type-tab").forEach(b=>b.classList.toggle("active",b.dataset.type===type));
-  $("bulkGeocodeBtn").textContent=`未登録座標を一括取得（${typeLabels[type]}）`;
+  $("bulkGeocodeBtn").textContent="全施設の未登録座標を取得・保存";
   reload();
 }
 
@@ -538,20 +614,98 @@ $("photoToggleBtn").onclick=async()=>{
   try{await savePhotoCardSetting(next)}catch(e){alert("変更できません: "+e.message)}
 };
 $("bulkGeocodeBtn").onclick=async()=>{
-  if(!allSpots.length)return;
-  if(!confirm(`現在表示中の${typeLabels[currentType]}で、緯度経度が未登録の施設を順番に取得します。件数が多い場合は時間がかかります。実行しますか？`))return;
-  $("bulkGeocodeBtn").disabled=true;let ok=0,ng=0,skipped=0;
+  if(!SpotStore.cloudConfigured()){
+    alert("この機能はSupabaseクラウド接続時に利用します。");
+    return;
+  }
+
+  let all=[];
   try{
-    for(let i=0;i<allSpots.length;i++){
-      const s=allSpots[i];
-      if(!s.address||(s.lat!=null&&s.lng!=null)){skipped++;continue}
-      $("bulkGeocodeBtn").textContent=`取得中 ${i+1}/${allSpots.length}`;
-      try{const r=await geocodeAddress(s.address,s.name);if(r){await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});ok++}else ng++}catch(e){ng++}
-      await sleep(600);
+    all=await SpotStore.list({includeInactive:true});
+  }catch(e){
+    alert("施設データを取得できませんでした: "+e.message);
+    return;
+  }
+
+  const targets=all.filter(s=>s.address && !(s.lat!=null && s.lng!=null));
+  if(!targets.length){
+    alert("緯度・経度が未登録の施設はありません。");
+    return;
+  }
+
+  if(!confirm(
+    `観光スポット・飲食店・宿泊施設のうち、座標未登録 ${targets.length}件を住所から取得してSupabaseへ保存します。\n\n`+
+    `途中で画面を閉じても、もう一度実行すれば未登録分だけ続きから取得できます。実行しますか？`
+  )) return;
+
+  const btn=$("bulkGeocodeBtn");
+  btn.disabled=true;
+
+  let done=0,ok=0,ng=0;
+  const failed=[];
+  let cursor=0;
+  let fatalError=null;
+
+  const updateProgress=()=>{
+    btn.textContent=`座標取得中 ${done}/${targets.length}（成功 ${ok}）`;
+  };
+  updateProgress();
+
+  async function worker(){
+    while(true){
+      if(fatalError)return;
+      const i=cursor++;
+      if(i>=targets.length)return;
+
+      const s=targets[i];
+      try{
+        const r=await geocodeAddress(s.address,s.name);
+        if(r){
+          await SpotStore.upsert({...s,lat:r.lat,lng:r.lng});
+          ok++;
+        }else{
+          ng++;
+          failed.push(s.name);
+        }
+      }catch(e){
+        const m=String(e?.message||e||"");
+        if(/geocode_gsi_proxy|function .* does not exist|schema cache|http/i.test(m)){
+          fatalError=e;
+          return;
+        }
+        ng++;
+        failed.push(s.name);
+      }finally{
+        done++;
+        updateProgress();
+      }
+
+      await sleep(180);
     }
-    await reload();alert(`完了しました。\n成功: ${ok}件\n取得できず: ${ng}件\n対象外: ${skipped}件`);
-  }finally{$("bulkGeocodeBtn").disabled=false;$("bulkGeocodeBtn").textContent=`未登録座標を一括取得（${typeLabels[currentType]}）`}
+  }
+
+  try{
+    await Promise.all([worker(),worker(),worker()]);
+
+    if(fatalError) throw fatalError;
+
+    alert(
+      `座標のクラウド保存が完了しました。\n成功: ${ok}件\n取得できず: ${ng}件`+
+      (failed.length?`\n\n取得できなかった例:\n${failed.slice(0,8).join("\n")}`:"")
+    );
+    await reload();
+  }catch(e){
+    alert(
+      "座標を取得できませんでした。\n\n"+
+      "先に GEOCODE_PROXY_SETUP.sql をSupabaseのSQL Editorで1回実行してください。\n\n"+
+      "詳細: "+(e?.message||e)
+    );
+  }finally{
+    btn.disabled=false;
+    btn.textContent="全施設の未登録座標を取得・保存";
+  }
 };
+
 init();
 </script>
 </body>

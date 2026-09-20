@@ -365,7 +365,7 @@ footer a{color:#fff}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
-<script src="./data-store-v2.js?v=20260920-1"></script>
+<script src="./data-store-v3.js?v=20260920-3"></script>
 <script>
 const categoryMap=[
  ["すべて",()=>true],
@@ -500,25 +500,12 @@ function validMapCoord(lat,lng){
  return Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180;
 }
 async function coordsForMap(item){
- if(validMapCoord(item.lat,item.lng)) return [Number(item.lat),Number(item.lng)];
- const address=mapAddress(item);
- if(!address) return null;
- const key=`${MAP_PAGE_KIND}|${item.name||""}|${address}`;
- const cache=mapCache();
- if(Array.isArray(cache[key])&&validMapCoord(cache[key][0],cache[key][1])) return cache[key];
- try{
-   const url="https://msearch.gsi.go.jp/address-search/AddressSearch?q="+encodeURIComponent(address);
-   const res=await fetch(url,{headers:{"Accept":"application/json"}});
-   if(!res.ok) return null;
-   const rows=await res.json();
-   const c=rows?.[0]?.geometry?.coordinates;
-   if(!Array.isArray(c)||c.length<2) return null;
-   const lat=Number(c[1]),lng=Number(c[0]);
-   if(!validMapCoord(lat,lng)) return null;
-   cache[key]=[lat,lng];saveMapCache(cache);
-   return [lat,lng];
- }catch(e){return null}
+ if(validMapCoord(item.lat,item.lng)){
+   return [Number(item.lat),Number(item.lng)];
+ }
+ return null;
 }
+
 function popupHtml(item){
  const name=esc(item.name||"");
  const address=esc(item.address||"");
