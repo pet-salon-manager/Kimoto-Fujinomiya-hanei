@@ -129,7 +129,7 @@ footer a{color:#fff}
 .map-popup-name{font-weight:900;font-size:13px;margin-bottom:4px}
 .map-popup-address{font-size:11px;line-height:1.4;margin-bottom:6px}
 .map-popup-link{display:inline-block;font-size:11px;font-weight:800;text-decoration:none;color:#0b7a5c}
-@media(max-width:580px){.map-stage{height:330px}}
+@media(max-width:580px){.map-stage{height:380px}}
 
 
 /* Leaflet core CSS — embedded locally for reliable iPhone rendering */
@@ -321,6 +321,28 @@ footer a{color:#fff}
 .leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}
 .leaflet-zoom-animated{will-change:transform}
 
+
+/* iPhone / touch map interaction fix */
+#facilityMap,
+#facilityMap.leaflet-container,
+.map-stage{
+ -webkit-user-select:none!important;
+ user-select:none!important;
+ -webkit-touch-callout:none!important;
+ overscroll-behavior:contain!important;
+}
+#facilityMap.leaflet-container{
+ touch-action:none!important;
+ -ms-touch-action:none!important;
+ cursor:grab;
+}
+#facilityMap.leaflet-container:active{cursor:grabbing}
+#facilityMap .leaflet-map-pane,
+#facilityMap .leaflet-tile-pane,
+#facilityMap .leaflet-marker-pane{
+ touch-action:none!important;
+}
+
 </style>
 </head>
 <body>
@@ -415,8 +437,8 @@ function mapCurrentIcon(){
 }
 const FUJINOMIYA_CENTER=[35.245,138.615];
 const FUJINOMIYA_MAX_BOUNDS=L.latLngBounds(
-  [35.03,138.40],
-  [35.50,138.80]
+  [34.98,138.30],
+  [35.56,138.90]
 );
 
 function forceMapResize(){
@@ -454,8 +476,18 @@ function ensureFacilityMap(){
    minZoom:10,
    maxZoom:18,
    maxBounds:FUJINOMIYA_MAX_BOUNDS,
-   maxBoundsViscosity:1.0,
-   worldCopyJump:false
+   maxBoundsViscosity:0.55,
+   worldCopyJump:false,
+   dragging:true,
+   touchZoom:true,
+   doubleClickZoom:true,
+   scrollWheelZoom:true,
+   boxZoom:false,
+   keyboard:false,
+   inertia:true,
+   inertiaDeceleration:2400,
+   inertiaMaxSpeed:1600,
+   easeLinearity:0.22
  }).setView(FUJINOMIYA_CENTER,11);
 
  const tileLayer=L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",{
@@ -632,6 +664,14 @@ document.getElementById("mapToggleBtn").onclick=()=>{
    mapRunId++;
  }
 };
+
+
+const mapTouchEl=document.getElementById("facilityMap");
+["touchstart","touchmove","pointerdown","pointermove"].forEach(type=>{
+ mapTouchEl.addEventListener(type,e=>{
+   if(mapVisible) e.stopPropagation();
+ },{passive:true});
+});
 
 document.getElementById("mapCurrentBtn").onclick=()=>{
  if(!mapVisible) return;
