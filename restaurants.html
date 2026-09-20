@@ -111,6 +111,11 @@ footer a{color:#fff}
  background:rgba(255,255,255,.22);border-radius:12px;padding:9px 10px
 }
 
+
+.page-switches{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.page-switches .locate{min-height:48px}
+.lodging-link{background:rgba(33,91,140,.92)}
+@media(max-width:580px){.page-switches{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -127,7 +132,10 @@ footer a{color:#fff}
   <section class="toolbar">
     <div class="search-wrap">
       <input id="search" class="search" type="search" placeholder="店名・住所・電話番号で検索">
-      <a class="locate" href="./index.html">🗻 観光スポットを検索</a>
+      <div class="page-switches">
+        <a class="locate" href="./index.html">🗻 観光スポットを検索</a>
+        <a class="locate lodging-link" href="./accommodations.html">🏨 宿泊施設を検索</a>
+      </div>
     </div>
   </section>
 

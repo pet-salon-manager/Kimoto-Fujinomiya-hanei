@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#244f78">
+<title>富士宮 宿泊施設検索｜ふじのみや旅ナビ</title>
+<style>
+:root{--blue:#2b6898;--blue2:#234f74;--ink:#173449;--line:rgba(255,255,255,.38)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink)}
+body{
+ background:
+ linear-gradient(rgba(14,43,67,.10),rgba(14,43,67,.18)),
+ url("./fujinomiya-bg.jpg") center top/cover fixed no-repeat;
+}
+.hero{min-height:380px;color:#fff;padding:38px 18px 72px}
+.hero-inner{max-width:1040px;margin:auto}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.09em;font-size:18px}
+.logo{width:48px;height:48px;background:rgba(255,255,255,.88);border-radius:14px;display:grid;place-items:center;box-shadow:0 8px 25px #0002}
+.logo svg{width:29px;height:29px}
+h1{font-size:clamp(32px,8vw,56px);line-height:1.05;margin:56px 0 12px;text-shadow:0 3px 18px #1248}
+.lead{max-width:720px;font-weight:700;font-size:17px;line-height:1.8;text-shadow:0 2px 10px #1247}
+main{max-width:1100px;margin:-28px auto 80px;padding:0 16px}
+.toolbar{
+ background:rgba(255,255,255,.62);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);
+ border:1px solid rgba(255,255,255,.48);border-radius:26px;padding:16px;
+ box-shadow:0 14px 32px rgba(16,58,80,.16)
+}
+.search-wrap{display:grid;gap:10px}
+.search{
+ width:100%;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.76);
+ border-radius:16px;padding:14px 16px;outline:none;font-size:16px
+}
+.page-switches{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.locate{
+ border:0;background:#0b7a5c;color:#fff;border-radius:16px;padding:12px 16px;font-weight:800;
+ text-decoration:none;display:grid;place-items:center;text-align:center;min-height:48px
+}
+.food-link{background:#9b5c23}
+.section-head{display:flex;justify-content:space-between;align-items:end;margin:28px 2px 14px}
+.section-head h2{margin:0;font-size:24px;color:#fff;text-shadow:0 2px 12px #0008}
+.count{color:#fff;font-size:14px;font-weight:800;text-shadow:0 2px 8px #0008}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{
+ position:relative;background:rgba(255,255,255,.12);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);
+ border:1px solid rgba(255,255,255,.30);border-radius:22px;overflow:hidden;
+ box-shadow:0 10px 24px rgba(11,43,60,.15);width:92%;margin:0 auto
+}
+.card-body{padding:15px;display:flex;flex-direction:column;gap:9px;background:rgba(255,255,255,.30)}
+.badge{
+ display:inline-flex;align-self:flex-start;padding:5px 8px;border-radius:999px;
+ background:rgba(255,255,255,.58);color:var(--blue2);font-weight:800;font-size:11px;
+ border:1px solid rgba(255,255,255,.46)
+}
+.card h3{font-size:18px;margin:0;line-height:1.4}
+.addr{font-size:12px;color:#203c4c;line-height:1.55;font-weight:700}
+.contact{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
+.contact a{
+ color:#19577f;text-decoration:none;background:rgba(255,255,255,.52);padding:5px 8px;
+ border-radius:9px;font-size:12px;font-weight:800
+}
+.desc{font-size:13px;line-height:1.7;color:#294858;background:rgba(255,255,255,.22);border-radius:12px;padding:9px 10px}
+.actions{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(62px,.65fr) 40px;gap:8px;margin-top:2px}
+.btn{border:0;border-radius:12px;padding:8px 6px;font-weight:800;text-align:center;text-decoration:none;font-size:12px}
+.btn.primary{background:rgba(43,104,152,.92);color:#fff}
+.btn.secondary{background:rgba(255,255,255,.58);color:#284a5e}
+.btn.fav{font-size:19px;background:rgba(255,243,217,.68);color:#a46b00}
+.pager{display:flex;justify-content:center;align-items:center;gap:10px;margin:22px 0 6px}
+.pager button{
+ border:0;border-radius:14px;padding:11px 18px;font-weight:900;font-size:13px;
+ background:rgba(255,255,255,.84);color:#234f74;box-shadow:0 6px 18px rgba(0,0,0,.10)
+}
+.pager button:disabled{opacity:.38}
+.page-info{color:#fff;font-size:12px;font-weight:900;text-shadow:0 2px 8px #0008;min-width:76px;text-align:center}
+.empty{
+ grid-column:1/-1;text-align:center;padding:45px;background:rgba(255,255,255,.62);
+ border-radius:22px;font-weight:800
+}
+.note{
+ margin-top:26px;padding:14px;border-radius:18px;background:rgba(255,248,235,.74);
+ backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);font-size:12px;line-height:1.7
+}
+footer{padding:30px 16px 48px;text-align:center;color:#fff;text-shadow:0 2px 8px #0008;line-height:1.8}
+footer a{color:#fff}
+@media(max-width:820px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:580px){
+ .hero{min-height:310px}h1{margin-top:48px}.lead{font-size:15px}
+ main{padding:0 12px}.grid{grid-template-columns:1fr;gap:22px}.page-switches{grid-template-columns:1fr}
+ .card{width:92%}.actions{grid-template-columns:minmax(0,1.35fr) minmax(60px,.62fr) 40px}
+}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-inner">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 64 64"><path d="M7 48 31 11l26 37H7Z" fill="#4ba37e"/><path d="m31 11 9 13-8 8-7-6-7 8Z" fill="#fff"/><circle cx="48" cy="13" r="7" fill="#f2be4f"/></svg></div>
+    <span>FUJINOMIYA STAY GUIDE</span>
+  </div>
+  <h1>富士宮の宿泊施設</h1>
+  <div class="lead">富士宮市内の旅館・ホテル・民宿・貸別荘・キャンプ場などから、旅の目的に合う宿泊施設を探せます。</div>
+</div></header>
+
+<main>
+  <section class="toolbar">
+    <div class="search-wrap">
+      <input id="search" class="search" type="search" placeholder="施設名・住所・電話番号・説明文で検索">
+      <div class="page-switches">
+        <a class="locate" href="./index.html">🗻 観光スポットを検索</a>
+        <a class="locate food-link" href="./restaurants.html">🍽️ 飲食店を検索</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>宿泊施設</h2>
+    <div id="count" class="count"></div>
+  </div>
+
+  <section id="grid" class="grid"></section>
+
+  <div class="pager">
+    <button id="prevPage" type="button">← 前の10件</button>
+    <div id="pageInfo" class="page-info"></div>
+    <button id="nextPage" type="button">次の10件 →</button>
+  </div>
+
+  <div class="note">
+    営業日・料金・予約条件・空室状況などは変更される場合があります。宿泊前に各施設へご確認ください。
+  </div>
+</main>
+
+<footer>
+  <strong>ふじのみや旅ナビ｜宿泊施設検索</strong><br>
+  地図・経路ボタンはGoogleマップへ移動します。
+</footer>
+
+<script>
+const ACCOMMODATIONS=[{"id":"accommodation-001","name":"割烹旅館 小川荘","address":"静岡県富士宮市大宮町10-1","phone":"0544-26-2197","description":"富士山本宮浅間大社の門前町にある老舗の料理旅館。四季の素材を使う懐石料理を中心に、日本旅館らしい落ち着いた客室と、天候時に富士山を望める露天風呂を備える。市街地観光と食事を重視する滞在に向く。"},{"id":"accommodation-002","name":"かめや旅館","address":"静岡県富士宮市大宮町23-6","phone":"0544-27-0061","description":"JR富士宮駅から徒歩圏の地域旅館。客室や最上階の展望風呂から富士山を望め、富士山世界遺産センターや浅間大社にも近い。観光・登山・出張・スポーツ合宿に対応し、地元食材を使った料理も提供する。"},{"id":"accommodation-003","name":"高原ホテル ニュー富士","address":"静岡県富士宮市人穴142-62","phone":"0544-52-0106","description":"朝霧高原の自然の中に建つ独立系ホテル。客室から富士山を眺められる立地を生かし、地元食材を取り入れたレストラン料理を提供する。観光だけでなく、研修・セミナー利用にも対応している。"},{"id":"accommodation-004","name":"スポーツビレッジ 村山ジャンボ","address":"静岡県富士宮市村山1071-2","phone":"0544-27-8438","description":"広い敷地にスポーツ・レジャー設備と宿泊機能を備えた合宿型施設。団体で体を動かした後に利用できる岩風呂や、季節に応じたバーベキュー・鍋料理などが特徴で、学校・クラブ・グループ旅行に向く。"},{"id":"accommodation-005","name":"割烹旅館 たちばな","address":"静岡県富士宮市野中1085-4","phone":"0544-27-7000","description":"富士宮市街を見下ろす高台の料理旅館。各客室から富士山の稜線や駿河湾方面の眺望を楽しめるよう設計され、景色と会席料理を重視した滞在に適する。宴会・会食を伴う宿泊にも対応する。"},{"id":"accommodation-006","name":"富士宮グリーンホテル","address":"静岡県富士宮市東町23-18","phone":"0544-23-1919","description":"JR富士宮駅前にある地域経営のビジネスホテル。鉄道利用の出張や市街地観光の拠点に便利で、全室Wi-Fiを備える。館内の和食処では地元食材を使った料理を扱い、簡単な軽食サービスも案内している。"},{"id":"accommodation-007","name":"丸石寿司料理旅館","address":"静岡県富士宮市宮町10-1","phone":"0544-27-2359","description":"寿司・和食店を併設する料理旅館。昼食や夕食、宴会だけでなく、企業・学校関係・観光客の宿泊を電話予約で受け付ける。浅間大社周辺を歩いて回りやすく、食事付きの市街地滞在に向く。"},{"id":"accommodation-008","name":"瓜島温泉 翠紅苑さくら","address":"静岡県富士宮市内房385","phone":"0544-65-0366","description":"明治7年創業、全4室の静かな温泉宿。日本庭園と季節の景観、貸切で楽しむ岩風呂・栢ノ木風呂、駿河湾の魚介と地元食材を使う海鮮会席が特徴。日帰り入浴は行わず、少人数の宿泊客に絞っている。"},{"id":"accommodation-009","name":"キャビンハウス ヤド 富士宮店","address":"静岡県富士宮市大宮町11-18","phone":"0544-23-4180","description":"市街地にある小規模なコンパクトホテル。必要な機能に絞ったキャビン型の客室と、和の雰囲気を取り入れた落ち着いた共用空間が特徴。浅間大社周辺の散策や低予算の一人旅、短期滞在に使いやすい。"},{"id":"accommodation-010","name":"GOTEN TOMOE residence","address":"静岡県富士宮市中央町10-8","phone":"0544-66-3190","description":"築約90年の木造住宅を改修した一日一組限定の一棟貸しヴィラ。約96平方メートルの和風空間を2～8人で利用でき、家族や友人だけで滞在できる。富士宮駅・浅間大社・世界遺産センターが徒歩圏にある。"},{"id":"accommodation-011","name":"民宿 水口屋","address":"静岡県富士宮市猪之頭854-4","phone":"0544-52-0070","description":"朝霧高原の猪之頭地区にある家庭的な民宿。富士山の雪解け水で育てた新鮮なマス料理を看板とし、定員は23人。田貫湖や朝霧高原の自然観光、釣りやハイキングの拠点に向く。"},{"id":"accommodation-012","name":"民宿旅館 中京","address":"静岡県富士宮市下条309-2","phone":"0544-58-0040","description":"富士山を望む北部地区の民宿旅館。24時間利用できる天然鉱石温泉、客室の無料インターネット、無料洗濯機など長めの滞在や合宿に便利な設備を備える。徒歩圏にコンビニやスーパーもある。"},{"id":"accommodation-013","name":"民宿・旅館 西の家","address":"静岡県富士宮市上井出1774","phone":"0544-54-0277","description":"白糸の滝に近い民宿旅館。富士登山・朝霧高原・富士五湖方面の観光拠点として使え、フットサルコートと天然芝サッカー場を備える。大人数のスポーツ合宿、サイクリングやオリエンテーリングにも対応する。"},{"id":"accommodation-014","name":"SLEEEP.jp fujinomiya","address":"静岡県富士宮市大宮町32-15","phone":"050-5532-2884","description":"JR富士宮駅から徒歩約2分のIoTカプセル型宿泊施設。ミニマルで環境負荷を抑えた滞在を掲げ、コンパクトながら睡眠の質を重視した設備を導入している。駅前で気軽に泊まりたい一人旅や短期滞在向け。"},{"id":"accommodation-015","name":"MUKUten.舎 富士宮","address":"静岡県富士宮市宮町5-34","phone":"0544-22-6910","description":"一日一組限定のまちなかリトリートホテル。希少な国産天然木を生かしたプリミティブモダンの客室とラウンジギャラリーを備える。浅間大社周辺の町歩きと、静かで私的な滞在を組み合わせたい旅行者に向く。"},{"id":"accommodation-016","name":"ゲストハウスハイネ北山","address":"静岡県富士宮市北山1525-5","phone":"090-3265-9127","description":"大石寺に近い北山地区の小規模ゲストハウス。個人客一人から利用できる地域密着型の民泊で、寺院訪問や富士宮北部の滞在拠点として使いやすい。予約方法や設備は事前に電話確認するのが確実。"},{"id":"accommodation-017","name":"ていし八","address":"静岡県富士宮市下条1001","phone":"070-8355-0548","description":"富士山麓の下条地区にある小規模民泊。完全禁煙と事業ごみゼロへの取り組みを掲げる環境配慮型の宿で、行楽・避暑・保養など静かな滞在を想定している。利用条件は予約時の確認が必要。"},{"id":"accommodation-018","name":"なか富士","address":"静岡県富士宮市猪之頭2166-4","phone":"050-8887-2273","description":"標高約700メートルの自然の中に3棟だけを設けた貸別荘型の宿。全棟から遮るものの少ない富士山を望み、アメリカンヴィンテージと和モダンの異なる内装を選べる。敷地内散策路があり、棟ごとの貸切にも対応する。"},{"id":"accommodation-019","name":"旅館ほし山","address":"静岡県富士宮市星山84-2","phone":"0544-26-3608","description":"緑に囲まれた静かな地域旅館。大風呂「弘法の湯」とバーベキュー場を備え、収容人数は約62人。スポーツ施設の予約代行や送迎にも対応し、学生・社会人の合宿や団体旅行に適している。"},{"id":"accommodation-020","name":"民宿旅館 明石","address":"静岡県富士宮市上条1070-1","phone":"0544-58-3755","description":"白糸の滝、田貫湖、富士登山などへの移動に便利な北部の民宿旅館。富士山を望める客室を複数備え、観光客のほかグループ・合宿利用にも対応する、家庭的な滞在拠点。"},{"id":"accommodation-021","name":"芝川苑","address":"静岡県富士宮市内房919-1","phone":"0544-65-0542","description":"芝川・内房地区の緑豊かな環境にある和風の宿。日本庭園を眺めながら落ち着いて過ごせ、四季の素材を生かした料理を提供する。市街地の喧騒を離れた保養や家族旅行、会食を伴う宿泊に向く。"},{"id":"accommodation-022","name":"MT. FUJI SATOYAMA VACATION","address":"静岡県富士宮市狩宿8-2","phone":"0544-66-5722","description":"「和」と里山文化をテーマにした少人数制のグランピング施設。SDGsを意識した施設づくりを行い、地域住民や自然との出会いを組み込むエコツアーも実施する。富士山を眺めながら体験型の滞在をしたい人向け。"},{"id":"accommodation-023","name":"朝霧ジャンボリーオートキャンプ場","address":"静岡県富士宮市猪之頭1162-3","phone":"0544-52-2066","description":"朝霧高原の広大な芝地に車で乗り入れられるオートフリーサイト。富士山の眺望、地下約180メートルから汲み上げる天然水、電源付き・プレミアムサイト、充実したレンタルが特徴で、初心者から長期滞在まで対応する。"},{"id":"accommodation-024","name":"田貫湖キャンプ場（南テントサイト）","address":"静岡県富士宮市佐折634-1","phone":"090-4234-8039／0544-52-0155","description":"田貫湖畔の全面芝生テントサイト。炊飯棟、トイレ、温水シャワーを備え、周遊散策・自転車・ボート・釣りも楽しめる。宿泊は予約制で、南側管理棟「瓔珞の家」が受付・売店・軽食営業を担う。"},{"id":"accommodation-025","name":"天子の森オートキャンプ場","address":"静岡県富士宮市佐折631","phone":"0544-54-1543","description":"天子ヶ岳の自然と川に近いオートキャンプ場。テント泊、車を横付けする区画、川遊びを中心に、静かな森林環境で過ごせる。例年4月から11月末ごろまでの季節営業で、営業日と予約状況の事前確認が必要。"},{"id":"accommodation-026","name":"ACN西富士オートキャンプ場","address":"静岡県富士宮市内野1687","phone":"0544-54-1947","description":"朝霧高原南端、標高約630メートルの野鳥の森にあるキャンプ場。東に富士山、西に天子ヶ岳を望み、場内の湧水や芝川への散策を楽しめる。静かな林間環境と県道からのアクセスの良さを両立している。"},{"id":"accommodation-027","name":"富士オートキャンプ場 ふもと村","address":"静岡県富士宮市麓174-1","phone":"0544-52-1220","description":"富士山麓の林間に約62区画を設けるオートキャンプ場。木々に囲まれた環境で、車をサイト近くに置いてキャンプを楽しめる。例年4月から11月上旬ごろまでの季節営業で、夏の避暑や家族キャンプに向く。"},{"id":"accommodation-028","name":"ペンギン村オートキャンプ場","address":"静岡県富士宮市猪之頭2351","phone":"090-7680-3286","description":"猪之頭の湧水と自然に恵まれた小規模なオートキャンプ場。場内の水辺と静かな林間環境を生かし、落ち着いてテント泊を楽しみたい家族や少人数グループに向く。予約・営業状況は電話での確認が確実。"},{"id":"accommodation-029","name":"ふもとっぱら","address":"静岡県富士宮市麓156","phone":"0544-52-2112","description":"富士山を正面に望む広大な草原で知られる地域運営のキャンプ・宿泊施設。フリーサイトでのテント泊やデイキャンプに加え、森のコテージにも宿泊できる。開放的な景観、星空、日の出を目的とする滞在に人気がある。"},{"id":"accommodation-030","name":"富士山ワイルドアドベンチャー（FWA）","address":"静岡県富士宮市上井出2753-2","phone":"0544-54-1705","description":"富士山を望むキャンプサイトに、アスレチックや動物とのふれあい、バーベキューを組み合わせた体験型施設。テント泊だけでなく約25室の宿泊棟があり、家族用の大和室・大洋室も選べる。"},{"id":"accommodation-031","name":"Field Dogs Garden","address":"静岡県富士宮市猪之頭字人穴道1816-9","phone":"0544-29-5211","description":"富士山を望む広いドッグランを中心に、犬と泊まれるキャンプサイトとロッジを備える複合施設。小型犬専用・貸切エリア、ドッグカフェ、ショップ、トリミングもあり、愛犬と一日を通して過ごしたい旅行者向け。"},{"id":"accommodation-032","name":"富士山YMCAグローバル・エコ・ヴィレッジ","address":"静岡県富士宮市原1423","phone":"0544-54-1151","description":"朝霧高原の広い草原を生かした野外教育・宿泊施設。宿泊棟とテント泊に対応し、家族・グループの自然体験、青少年活動、学校行事、企業研修などに利用される。一般観光宿とは利用趣旨やルールが異なるため事前確認が必要。"},{"id":"accommodation-033","name":"新富士オートキャンプ場","address":"静岡県富士宮市北山字鞍骨7430","phone":"0544-54-2838","description":"富士山麓の北山地区にある林間型オートキャンプ場。区画サイトに車を乗り入れて滞在でき、トイレやシャワーなどの基本設備を備える。木立に囲まれた環境で、夏のキャンプや家族・グループ利用に向く。"},{"id":"accommodation-034","name":"朝霧高原 英知の杜キャンプ場","address":"静岡県富士宮市根原71-3","phone":"0544-52-1616","description":"標高約900メートルの朝霧高原・根原地区にあるキャンプ場。富士山麓の静かな環境でデジタル機器から離れて過ごすことを掲げ、ソロからグループまで利用できる。通年営業の案内があるが、天候・営業日は要確認。"},{"id":"accommodation-035","name":"朝霧Camp Base そらいろ","address":"静岡県富士宮市麓624-7","phone":"0544-21-3955","description":"標高約800メートルの朝霧高原にあるオートキャンプ場。富士山と広い空を望む開放的なフリーサイトを中心に、ドライブの目的地・出発点となる滞在を提案する。季節の催しや営業情報は公式案内で確認できる。"},{"id":"accommodation-036","name":"富士ミルクランド 富士朝霧高原ロッジ・キャンプ場","address":"静岡県富士宮市上井出3690","phone":"0544-54-3690","description":"牧場型観光施設に併設された二階建てロッジとキャンプ場。ロッジはキッチン家電や調理器具を備え、ペット同伴可能な客室もある。動物とのふれあい、乳製品、バーベキューと宿泊を一か所で楽しみやすい。"},{"id":"accommodation-037","name":"休暇村富士","address":"静岡県富士宮市佐折634","phone":"0544-54-5200","description":"田貫湖の西岸に位置し、館内や全客室から富士山を望めるリゾート型宿泊施設。弱アルカリ性の温泉大浴場、地元食材を取り入れた食事、約60室の客室を備えるほか、ホテルから徒歩数分の貸別荘型コテージも利用できる。湖畔散策、展望デッキ、ダイヤモンド富士の観賞など、田貫湖周辺の自然を楽しむ滞在拠点に適している。"}];
+const PAGE_SIZE=10;
+let currentPage=1;
+let favorites=new Set(JSON.parse(localStorage.getItem("fujinomiyaAccommodationFavorites")||"[]"));
+
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const destination=a=>`${a.name||""} ${a.address||""}`.trim();
+const mapUrl=a=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination(a))}`;
+const routeUrl=a=>`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination(a))}&travelmode=driving`;
+const searchUrl=a=>`https://www.google.com/search?q=${encodeURIComponent(a.name+" 富士宮")}`;
+const phoneNumbers=phone=>String(phone||"").match(/0\d{1,4}-\d{1,4}-\d{3,4}/g)||[];
+
+function filtered(){
+ const q=document.getElementById("search").value.trim().toLowerCase();
+ if(!q) return ACCOMMODATIONS;
+ return ACCOMMODATIONS.filter(a=>
+   `${a.name} ${a.address} ${a.phone} ${a.description}`.toLowerCase().includes(q)
+ );
+}
+
+function phoneHtml(phone){
+ const nums=phoneNumbers(phone);
+ if(!nums.length) return `<span>${esc(phone||"電話番号情報なし")}</span>`;
+ return nums.map(n=>`<a href="tel:${n.replace(/\D/g,"")}">☎ ${esc(n)}</a>`).join("");
+}
+
+function render(){
+ const data=filtered();
+ const totalPages=Math.max(1,Math.ceil(data.length/PAGE_SIZE));
+ if(currentPage>totalPages) currentPage=totalPages;
+ if(currentPage<1) currentPage=1;
+
+ const start=(currentPage-1)*PAGE_SIZE;
+ const pageData=data.slice(start,start+PAGE_SIZE);
+
+ document.getElementById("count").textContent=`${data.length}件`;
+ document.getElementById("pageInfo").textContent=data.length?`${currentPage} / ${totalPages}`:"";
+ document.getElementById("prevPage").disabled=currentPage<=1;
+ document.getElementById("nextPage").disabled=currentPage>=totalPages||!data.length;
+
+ const grid=document.getElementById("grid");
+ if(!data.length){
+   grid.innerHTML='<div class="empty">条件に合う宿泊施設がありません。</div>';
+   return;
+ }
+
+ grid.innerHTML=pageData.map(a=>{
+   const fav=favorites.has(a.id);
+   return `<article class="card">
+     <div class="card-body">
+       <div class="badge">宿泊施設</div>
+       <h3>${esc(a.name)}</h3>
+       <div class="addr">📍 ${esc(a.address)}</div>
+       <div class="contact">
+         ${phoneHtml(a.phone)}
+         <a href="${searchUrl(a)}" target="_blank" rel="noopener">🔎 検索する</a>
+       </div>
+       <div class="desc">${esc(a.description)}</div>
+       <div class="actions">
+         <a class="btn primary" href="${routeUrl(a)}" target="_blank" rel="noopener">📍 現在地からの行き方</a>
+         <a class="btn secondary" href="${mapUrl(a)}" target="_blank" rel="noopener">地図</a>
+         <button class="btn fav" data-fav="${esc(a.id)}">${fav?"★":"☆"}</button>
+       </div>
+     </div>
+   </article>`;
+ }).join("");
+
+ grid.querySelectorAll("[data-fav]").forEach(btn=>{
+   btn.onclick=()=>{
+     const id=btn.dataset.fav;
+     favorites.has(id)?favorites.delete(id):favorites.add(id);
+     localStorage.setItem("fujinomiyaAccommodationFavorites",JSON.stringify([...favorites]));
+     render();
+   };
+ });
+}
+
+document.getElementById("search").addEventListener("input",()=>{currentPage=1;render()});
+document.getElementById("prevPage").onclick=()=>{if(currentPage>1){currentPage--;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
+document.getElementById("nextPage").onclick=()=>{const total=Math.ceil(filtered().length/PAGE_SIZE);if(currentPage<total){currentPage++;render();window.scrollTo({top:document.querySelector(".section-head").offsetTop-20,behavior:"smooth"})}};
+render();
+</script>
+</body>
+</html>

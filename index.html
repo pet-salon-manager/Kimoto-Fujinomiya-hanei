@@ -83,6 +83,11 @@ footer a{color:#fff}
 .addr-block{display:flex;flex-direction:column;align-items:flex-start}
 .phone-list{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start}
 
+
+.page-switches{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.page-switches .locate{min-height:48px}
+.lodging-link{background:rgba(33,91,140,.92)}
+@media(max-width:580px){.page-switches{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -95,7 +100,10 @@ footer a{color:#fff}
   <section class="toolbar">
     <div class="search-wrap">
       <input id="search" class="search" type="search" placeholder="スポット名・住所・見どころで検索">
-      <a class="locate page-switch" href="./restaurants.html">🍽️ 飲食店を検索</a>
+      <div class="page-switches">
+        <a class="locate page-switch" href="./restaurants.html">🍽️ 飲食店を検索</a>
+        <a class="locate page-switch lodging-link" href="./accommodations.html">🏨 宿泊施設を検索</a>
+      </div>
     </div>
     <div id="chips" class="chips"></div>
   </section>
