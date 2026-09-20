@@ -128,7 +128,16 @@ footer a{color:#fff}
  background:rgba(255,255,255,.67);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
  border:1px solid rgba(255,255,255,.55);box-shadow:0 12px 28px rgba(0,0,0,.12)
 }
-#facilityMap{height:390px;border-radius:16px;overflow:hidden;background:#dfece5}
+.map-stage{position:relative;width:100%;height:390px;border-radius:16px;overflow:hidden;background:#dfece5}
+#facilityMap{position:absolute;inset:0;width:100%!important;height:100%!important;border-radius:16px;overflow:hidden;background:#dfece5}
+#facilityMap .leaflet-container{width:100%!important;height:100%!important}
+#facilityMap .leaflet-tile-container img,#facilityMap .leaflet-tile{max-width:none!important;max-height:none!important}
+.map-current-btn{
+ position:absolute;top:10px;right:10px;z-index:1000;border:2px solid rgba(255,255,255,.95);
+ border-radius:999px;background:rgba(255,255,255,.94);color:#1769aa;font-weight:900;
+ font-size:12px;padding:9px 12px;box-shadow:0 4px 14px rgba(0,0,0,.20)
+}
+.map-current-btn:active{transform:scale(.98)}
 .map-status{font-size:11px;line-height:1.45;color:#37574c;padding:7px 4px 1px;font-weight:700}
 .cute-pin{position:relative;width:40px;height:49px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28))}
 .cute-pin .pin-circle{
@@ -145,7 +154,7 @@ footer a{color:#fff}
 .map-popup-name{font-weight:900;font-size:13px;margin-bottom:4px}
 .map-popup-address{font-size:11px;line-height:1.4;margin-bottom:6px}
 .map-popup-link{display:inline-block;font-size:11px;font-weight:800;text-decoration:none;color:#0b7a5c}
-@media(max-width:580px){#facilityMap{height:330px}}
+@media(max-width:580px){.map-stage{height:330px}}
 
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -178,7 +187,10 @@ footer a{color:#fff}
     <div id="count" class="count"></div>
   </div>
   <div id="mapPanel" class="map-panel" hidden>
-    <div id="facilityMap"></div>
+    <div class="map-stage">
+      <div id="facilityMap"></div>
+      <button id="mapCurrentBtn" class="map-current-btn" type="button">◎ 現在地</button>
+    </div>
     <div id="mapStatus" class="map-status">現在表示中の最大10件を地図に表示します。</div>
   </div>
 
@@ -243,13 +255,56 @@ function mapCurrentIcon(){
    iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
  });
 }
+const FUJINOMIYA_CENTER=[35.245,138.615];
+const FUJINOMIYA_MAX_BOUNDS=L.latLngBounds(
+  [35.03,138.40],
+  [35.50,138.80]
+);
+
+function forceMapResize(){
+ if(!appMap) return;
+ const run=()=>{
+   try{
+     appMap.invalidateSize({pan:false,animate:false});
+   }catch(e){}
+ };
+ requestAnimationFrame(()=>{
+   run();
+   requestAnimationFrame(run);
+ });
+ setTimeout(run,80);
+ setTimeout(run,220);
+ setTimeout(run,500);
+}
+
 function ensureFacilityMap(){
  if(appMap) return appMap;
- appMap=L.map("facilityMap",{zoomControl:true}).setView([35.222,138.621],12);
+ appMap=L.map("facilityMap",{
+   zoomControl:true,
+   minZoom:10,
+   maxZoom:18,
+   maxBounds:FUJINOMIYA_MAX_BOUNDS,
+   maxBoundsViscosity:1.0,
+   worldCopyJump:false
+ }).setView(FUJINOMIYA_CENTER,11);
+
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-   maxZoom:19,attribution:"&copy; OpenStreetMap contributors"
+   minZoom:10,
+   maxZoom:18,
+   noWrap:true,
+   keepBuffer:4,
+   updateWhenIdle:false,
+   attribution:"&copy; OpenStreetMap contributors"
  }).addTo(appMap);
+
+ appMap.setMaxBounds(FUJINOMIYA_MAX_BOUNDS);
  mapFacilityLayer=L.layerGroup().addTo(appMap);
+
+ appMap.on("drag",()=>{
+   appMap.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:false});
+ });
+
+ forceMapResize();
  return appMap;
 }
 function mapAddress(item){
@@ -297,11 +352,18 @@ function popupHtml(item){
 }
 function fitFacilityMap(bounds){
  if(!appMap) return;
- const all=[...bounds];
- if(mapCurrentLatLng) all.push(mapCurrentLatLng);
- if(all.length===1){appMap.setView(all[0],15);return}
- if(all.length>1){appMap.fitBounds(all,{padding:[34,34],maxZoom:16});return}
- appMap.setView([35.222,138.621],12);
+ const all=[...bounds].filter(c=>FUJINOMIYA_MAX_BOUNDS.contains(c));
+ if(mapCurrentLatLng && FUJINOMIYA_MAX_BOUNDS.contains(mapCurrentLatLng)) all.push(mapCurrentLatLng);
+
+ if(all.length===1){
+   appMap.setView(all[0],15);
+ }else if(all.length>1){
+   appMap.fitBounds(all,{padding:[36,36],maxZoom:16});
+ }else{
+   appMap.setView(FUJINOMIYA_CENTER,11);
+ }
+ appMap.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:false});
+ forceMapResize();
 }
 async function refreshFacilityMap(items){
  if(!mapVisible||!window.L) return;
@@ -326,22 +388,40 @@ async function refreshFacilityMap(items){
  if(run!==mapRunId) return;
  fitFacilityMap(bounds);
  status.textContent=`現在表示中の${list.length}件を地図に表示しています。緑のピンをタップすると施設名を確認できます。`;
- setTimeout(()=>map.invalidateSize(),50);
+ forceMapResize();
 }
-function locateCurrentOnMap(){
+function locateCurrentOnMap({move=true}={}){
  if(!navigator.geolocation||!mapVisible) return;
+ const btn=document.getElementById("mapCurrentBtn");
+ if(btn){btn.disabled=true;btn.textContent="取得中…";}
  navigator.geolocation.getCurrentPosition(pos=>{
    if(!mapVisible) return;
    const c=[pos.coords.latitude,pos.coords.longitude];
    mapCurrentLatLng=c;
    const map=ensureFacilityMap();
+
    if(mapCurrentMarker) mapCurrentMarker.setLatLng(c);
-   else mapCurrentMarker=L.marker(c,{icon:mapCurrentIcon(),zIndexOffset:1000}).addTo(map).bindPopup("<strong>現在地</strong>");
-   refreshFacilityMap(CURRENT_MAP_ITEMS);
+   else mapCurrentMarker=L.marker(c,{icon:mapCurrentIcon(),zIndexOffset:1000})
+      .addTo(map).bindPopup("<strong>現在地</strong>");
+
+   if(move){
+     if(FUJINOMIYA_MAX_BOUNDS.contains(c)){
+       map.setView(c,15,{animate:true});
+       setTimeout(()=>mapCurrentMarker&&mapCurrentMarker.openPopup(),250);
+     }else{
+       const s=document.getElementById("mapStatus");
+       if(s) s.textContent="現在地は富士宮市周辺の地図表示範囲外です。";
+       map.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:true});
+     }
+   }
+
+   if(btn){btn.disabled=false;btn.textContent="◎ 現在地";}
+   forceMapResize();
  },()=>{
    const s=document.getElementById("mapStatus");
-   if(s) s.textContent+=" 現在地は位置情報の許可後に青いピンで表示されます。";
- },{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+   if(s) s.textContent="現在地を表示するには、このサイトの位置情報を許可してください。";
+   if(btn){btn.disabled=false;btn.textContent="◎ 現在地";}
+ },{enableHighAccuracy:true,timeout:12000,maximumAge:15000});
 }
 document.getElementById("mapToggleBtn").onclick=()=>{
  mapVisible=!mapVisible;
@@ -350,12 +430,22 @@ document.getElementById("mapToggleBtn").onclick=()=>{
  panel.hidden=!mapVisible;
  btn.classList.toggle("open",mapVisible);
  btn.textContent=mapVisible?"✕ 地図を閉じる":"🗺️ 地図で見る";
+
  if(mapVisible){
-   ensureFacilityMap();
-   setTimeout(()=>appMap.invalidateSize(),50);
-   refreshFacilityMap(CURRENT_MAP_ITEMS);
-   locateCurrentOnMap();
+   requestAnimationFrame(()=>{
+     ensureFacilityMap();
+     forceMapResize();
+     refreshFacilityMap(CURRENT_MAP_ITEMS);
+     locateCurrentOnMap({move:false});
+   });
+ }else{
+   mapRunId++;
  }
+};
+
+document.getElementById("mapCurrentBtn").onclick=()=>{
+ if(!mapVisible) return;
+ locateCurrentOnMap({move:true});
 };
 
 const fullAddress=r=>String(r.address||"").startsWith("静岡県")?String(r.address||""):`静岡県富士宮市${r.address||""}`;
