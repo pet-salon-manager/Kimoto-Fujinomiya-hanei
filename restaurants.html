@@ -452,6 +452,35 @@ footer a{color:#fff}
   }
 }
 
+
+.map-popup-actions{
+ display:flex;
+ flex-direction:column;
+ gap:6px;
+ margin-top:7px;
+}
+.map-popup-route{
+ display:block;
+ padding:8px 10px;
+ border-radius:10px;
+ background:#0b7a5c;
+ color:#fff!important;
+ text-decoration:none;
+ font-size:11px;
+ font-weight:900;
+ text-align:center;
+}
+.map-popup-route:hover{
+ filter:brightness(.96);
+}
+.map-popup-link{
+ display:block;
+ padding:6px 8px;
+ border-radius:9px;
+ background:rgba(11,122,92,.09);
+ text-align:center;
+}
+
 </style>
 </head>
 <body>
@@ -660,7 +689,7 @@ function renderIndividualMarkers(points){
      const e=g.items[0];
      L.marker(e.c,{icon:mapFacilityIcon(e.item),zIndexOffset:520})
        .addTo(mapFacilityLayer)
-       .bindPopup(popupHtml(e.item));
+       .bindPopup(popupHtml(e.item,e.c));
      continue;
    }
 
@@ -680,7 +709,7 @@ function renderIndividualMarkers(points){
        zIndexOffset:540+i
      })
        .addTo(mapFacilityLayer)
-       .bindPopup(popupHtml(e.item));
+       .bindPopup(popupHtml(e.item,e.c));
    });
  }
 }
@@ -724,7 +753,7 @@ function renderClusteredMarkers(){
    if(cl.items.length===1){
      const e=cl.items[0];
      L.marker(e.c,{icon:mapFacilityIcon(e.item),zIndexOffset:500})
-      .addTo(mapFacilityLayer).bindPopup(popupHtml(e.item));
+      .addTo(mapFacilityLayer).bindPopup(popupHtml(e.item,e.c));
      continue;
    }
 
@@ -789,11 +818,33 @@ async function coordsForMap(item){
  return null;
 }
 
-function popupHtml(item){
+function popupHtml(item,c){
  const name=esc(item.name||"");
  const address=esc(item.address||"");
  const q=encodeURIComponent(`${item.name||""} ${mapAddress(item)}`.trim());
- return `<div class="map-popup-name">${name}</div><div class="map-popup-address">${address}</div><a class="map-popup-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${q}">Googleマップで開く</a>`;
+
+ let dest="";
+ if(Array.isArray(c)&&c.length>=2&&Number.isFinite(Number(c[0]))&&Number.isFinite(Number(c[1]))){
+   dest=`${Number(c[0])},${Number(c[1])}`;
+ }else{
+   dest=`${item.name||""} ${mapAddress(item)}`.trim();
+ }
+
+ const route=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+ const search=`https://www.google.com/maps/search/?api=1&query=${q}`;
+
+ return `
+   <div class="map-popup-name">${name}</div>
+   <div class="map-popup-address">${address}</div>
+   <div class="map-popup-actions">
+     <a class="map-popup-route" target="_blank" rel="noopener" href="${route}">
+       📍 現在地からの行き方
+     </a>
+     <a class="map-popup-link" target="_blank" rel="noopener" href="${search}">
+       Googleマップで確認
+     </a>
+   </div>
+ `;
 }
 function fitFacilityMap(bounds){
  if(!appMap) return;
