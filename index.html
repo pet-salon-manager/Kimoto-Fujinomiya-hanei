@@ -520,13 +520,26 @@ const MAP_ART={
 function escAttr(v){
  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 }
-const CATEGORY_PIN_PHOTO={
- attraction:"./fujinomiya-bg.jpg",
- restaurant:"./restaurants-bg.png",
- accommodation:"./accommodations-bg.png"
-};
+function facilityPhotoUrl(item){
+ const candidates=[
+   item?.image_url,
+   item?.imageUrl,
+   item?.photo_url,
+   item?.photoUrl,
+   item?.photo,
+   item?.image,
+   item?.thumbnail,
+   item?.thumb,
+   item?.imagePath
+ ];
+ for(const c of candidates){
+   const v=String(c||"").trim();
+   if(v) return v;
+ }
+ return "";
+}
 function mapFacilityIcon(item){
- const photo=CATEGORY_PIN_PHOTO[MAP_PAGE_KIND]||"";
+ const photo=facilityPhotoUrl(item);
  const inner=photo
    ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
    : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
