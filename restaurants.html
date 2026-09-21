@@ -432,6 +432,26 @@ footer a{color:#fff}
  display:block!important;
 }
 
+
+/* Desktop mouse drag page navigation */
+@media (hover:hover) and (pointer:fine){
+  .toolbar{
+    cursor:grab;
+  }
+  .toolbar.mouse-dragging{
+    cursor:grabbing;
+  }
+  .toolbar input,
+  .toolbar button,
+  .toolbar a,
+  .toolbar select,
+  .toolbar textarea,
+  .toolbar #facilityMap,
+  .toolbar .leaflet-container{
+    cursor:auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -453,7 +473,7 @@ footer a{color:#fff}
     </div>
   
     <div class="swipe-hint">
-      ← この枠を左右にスライドすると「観光スポット・飲食店・宿泊施設」を切り替えられます →
+      ← スマホは左右にスライド、パソコンはマウスで左右にドラッグするとページを切り替えられます →
       <div class="swipe-dots"><span class="swipe-dot"></span><span class="swipe-dot active"></span><span class="swipe-dot"></span></div>
     </div>
 </section>
@@ -1045,6 +1065,64 @@ if(swipeToolbar){
   },{passive:true});
 
   swipeToolbar.addEventListener("touchcancel",resetToolbarSwipe,{passive:true});
+
+  /* Desktop mouse-drag navigation */
+  let mouseDragActive=false;
+  let mouseDragStartX=0;
+  let mouseDragStartY=0;
+  let mouseDragLastX=0;
+  let mouseDragLastY=0;
+
+  swipeToolbar.addEventListener("mousedown",e=>{
+    if(e.button!==0 || swipeTargetIsInteractive(e.target)) return;
+    mouseDragActive=true;
+    mouseDragStartX=e.clientX;
+    mouseDragStartY=e.clientY;
+    mouseDragLastX=e.clientX;
+    mouseDragLastY=e.clientY;
+    toolbarSwipeLocked=false;
+    swipeToolbar.classList.add("mouse-dragging");
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove",e=>{
+    if(!mouseDragActive) return;
+    mouseDragLastX=e.clientX;
+    mouseDragLastY=e.clientY;
+
+    const dx=e.clientX-mouseDragStartX;
+    const dy=e.clientY-mouseDragStartY;
+
+    if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)*1.15){
+      swipeToolbar.classList.toggle("swiping-left",dx<0);
+      swipeToolbar.classList.toggle("swiping-right",dx>0);
+    }
+  });
+
+  window.addEventListener("mouseup",e=>{
+    if(!mouseDragActive) return;
+
+    mouseDragActive=false;
+    swipeToolbar.classList.remove("mouse-dragging");
+
+    const dx=e.clientX-mouseDragStartX;
+    const dy=e.clientY-mouseDragStartY;
+    const horizontal=Math.abs(dx)>=70 && Math.abs(dx)>Math.abs(dy)*1.2;
+
+    resetToolbarSwipe();
+
+    if(horizontal){
+      location.href=dx<0?SWIPE_NEXT_PAGE:SWIPE_PREV_PAGE;
+    }
+  });
+
+  window.addEventListener("blur",()=>{
+    if(!mouseDragActive) return;
+    mouseDragActive=false;
+    swipeToolbar.classList.remove("mouse-dragging");
+    resetToolbarSwipe();
+  });
+
 }
 
 </script>
