@@ -595,13 +595,77 @@ function ensureFacilityMap(){
  forceMapResize();
  return appMap;
 }
+function renderIndividualMarkers(points){
+ if(!appMap||!mapFacilityLayer||!window.L)return;
+
+ // At high zoom, show every facility as a separate pin.
+ // When multiple facilities have the same/almost-same coordinates,
+ // spread them slightly in a circle so no pin is hidden underneath another.
+ const groups=[];
+ const thresholdPx=12;
+
+ for(const entry of points){
+   const p=appMap.latLngToLayerPoint(L.latLng(entry.c[0],entry.c[1]));
+   let group=null;
+   for(const g of groups){
+     const dx=p.x-g.x,dy=p.y-g.y;
+     if(Math.sqrt(dx*dx+dy*dy)<=thresholdPx){group=g;break;}
+   }
+   if(group){
+     group.items.push(entry);
+     group.x=(group.x*(group.items.length-1)+p.x)/group.items.length;
+     group.y=(group.y*(group.items.length-1)+p.y)/group.items.length;
+   }else{
+     groups.push({items:[entry],x:p.x,y:p.y});
+   }
+ }
+
+ for(const g of groups){
+   if(g.items.length===1){
+     const e=g.items[0];
+     L.marker(e.c,{icon:mapFacilityIcon(e.item),zIndexOffset:520})
+       .addTo(mapFacilityLayer)
+       .bindPopup(popupHtml(e.item));
+     continue;
+   }
+
+   const count=g.items.length;
+   const radius=Math.min(44,26+count*2);
+
+   g.items.forEach((e,i)=>{
+     const angle=(Math.PI*2*i/count)-Math.PI/2;
+     const px=L.point(
+       g.x+Math.cos(angle)*radius,
+       g.y+Math.sin(angle)*radius
+     );
+     const shownLatLng=appMap.layerPointToLatLng(px);
+
+     L.marker(shownLatLng,{
+       icon:mapFacilityIcon(e.item),
+       zIndexOffset:540+i
+     })
+       .addTo(mapFacilityLayer)
+       .bindPopup(popupHtml(e.item));
+   });
+ }
+}
+
 function renderClusteredMarkers(){
  if(!appMap||!mapFacilityLayer||!window.L)return;
  mapFacilityLayer.clearLayers();
  const points=(MAP_MARKER_POINTS||[]).filter(p=>p&&inMapBounds(p.c));
  if(!points.length)return;
+
  const zoom=appMap.getZoom();
- const radius=zoom>=16?28:zoom>=14?42:zoom>=12?52:62;
+
+ // From zoom 17 onward, never keep a numbered cluster.
+ // Every facility becomes an individual pin.
+ if(zoom>=17){
+   renderIndividualMarkers(points);
+   return;
+ }
+
+ const radius=zoom>=16?22:zoom>=14?38:zoom>=12?50:62;
  const clusters=[];
 
  for(const entry of points){
@@ -628,16 +692,40 @@ function renderClusteredMarkers(){
       .addTo(mapFacilityLayer).bindPopup(popupHtml(e.item));
      continue;
    }
+
    let lat=0,lng=0;
    for(const e of cl.items){lat+=e.c[0];lng+=e.c[1];}
    const center=[lat/cl.items.length,lng/cl.items.length];
-   const marker=L.marker(center,{icon:mapClusterIcon(cl.items.length),zIndexOffset:450}).addTo(mapFacilityLayer);
+
+   const marker=L.marker(center,{
+     icon:mapClusterIcon(cl.items.length),
+     zIndexOffset:450
+   }).addTo(mapFacilityLayer);
+
    marker.on("click",()=>{
      const childBounds=L.latLngBounds(cl.items.map(e=>e.c));
+
+     // If facilities share almost the same coordinates, fitBounds may not zoom enough.
+     // Force zoom 18 so the numbered cluster is guaranteed to split.
      if(childBounds.isValid()){
-       appMap.fitBounds(childBounds,{padding:[45,45],maxZoom:Math.min(18,zoom+2)});
+       const sw=childBounds.getSouthWest();
+       const ne=childBounds.getNorthEast();
+       const almostSame=Math.abs(sw.lat-ne.lat)<0.00003 &&
+                        Math.abs(sw.lng-ne.lng)<0.00003;
+
+       if(almostSame){
+         appMap.setView(center,18,{animate:true});
+       }else{
+         appMap.fitBounds(childBounds,{
+           padding:[55,55],
+           maxZoom:18
+         });
+         if(appMap.getZoom()<17){
+           setTimeout(()=>appMap.setZoom(17,{animate:true}),180);
+         }
+       }
      }else{
-       appMap.setView(center,Math.min(18,zoom+2));
+       appMap.setView(center,18,{animate:true});
      }
    });
  }
@@ -730,7 +818,7 @@ async function refreshFacilityMap(items){
  if(run!==mapRunId)return;
  renderClusteredMarkers();
  fitFacilityMap(bounds);
- if(status)status.textContent=`このページの該当施設 ${list.length}件中、${plotted}件を地図に表示しています。近い施設は数字でまとめています。`;
+ if(status)status.textContent=`このページの該当施設 ${list.length}件中、${plotted}件を地図に表示しています。近い施設は数字でまとめています。拡大すると単体ピンに分かれます。`;
  forceMapResize();
 }
 function locateCurrentOnMap({move=true}={}){
