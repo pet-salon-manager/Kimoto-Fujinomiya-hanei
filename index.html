@@ -10,8 +10,6 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <title>ふじのみや旅ナビ</title>
 <style>
 :root{--green:#0b7a5c;--green2:#0d5f4b;--ink:#15332b;--line:#dfe9e4;--radius:22px}
@@ -377,64 +375,20 @@ footer a{color:#fff}
 }
 
 
-/* Cluster + photo pin styles */
-.leaflet-div-icon{background:transparent;border:none}
-.map-cluster{
- width:54px;height:54px;border-radius:50%;
+/* Stable built-in cluster + facility-photo pin */
+.map-cluster-pin{
+ width:52px;height:52px;border-radius:50%;
  display:grid;place-items:center;
- background:radial-gradient(circle at 35% 35%, #69d8a6 0%, #15945f 58%, #0d6c47 100%);
+ background:linear-gradient(145deg,#38b97f,#0b7652);
  border:4px solid #fff;
- color:#fff;
- font-weight:900;
- font-size:17px;
- box-shadow:0 8px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.35);
+ box-shadow:0 6px 16px rgba(0,0,0,.25);
+ color:#fff;font-size:17px;font-weight:900;
 }
-.map-cluster span{
- display:inline-block;
- min-width:28px;
- text-align:center;
- line-height:1;
-}
-.cute-pin{
- position:relative!important;
- width:50px!important;
- height:62px!important;
- display:block!important;
- filter:drop-shadow(0 6px 10px rgba(0,0,0,.28));
-}
-.cute-pin .pin-circle{
- width:48px;height:48px;border-radius:50%;
- display:grid;place-items:center;
- border:3px solid #fff;position:relative;z-index:2;
- overflow:hidden;
- box-shadow:0 2px 8px rgba(0,0,0,.18) inset;
- background:#15945f;
-}
-.cute-pin .pin-tail{
- position:absolute;left:17px;top:38px;width:16px;height:16px;
- transform:rotate(45deg);
- border-right:3px solid #fff;border-bottom:3px solid #fff;z-index:1;
- background:#15945f;
-}
-.cute-pin.current .pin-circle,.cute-pin.current .pin-tail{background:#2186df}
-.cute-pin.facility.has-photo .pin-circle{
- background:#ffffff;
-}
-.cute-pin.facility.has-photo .pin-tail{
- background:#1e8b60;
-}
-.cute-pin .pin-photo{
- width:100%;height:100%;
- object-fit:cover;
- display:block;
-}
-.cute-pin .pin-fallback{
- width:100%;height:100%;
- display:grid;place-items:center;
- background:linear-gradient(180deg,#29b377 0%,#15945f 100%);
-}
-.cute-pin .pin-fallback svg{width:28px;height:28px;display:block}
-.cute-pin svg{width:24px;height:24px;display:block}
+.map-cluster-pin span{line-height:1;min-width:24px;text-align:center}
+.cute-pin.facility.has-photo .pin-circle{background:#fff;overflow:hidden}
+.cute-pin.facility.has-photo .pin-tail{background:#15945f}
+.cute-pin .pin-photo{width:100%;height:100%;object-fit:cover;display:block}
+.cute-pin .pin-fallback{width:100%;height:100%;display:grid;place-items:center;background:#15945f}
 
 </style>
 </head>
@@ -478,12 +432,11 @@ footer a{color:#fff}
 <div id="toast" class="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
- integrity="sha256-20nQCchB9co0qIjZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
 <script src="./spots-default.js"></script>
-<script src="./data-store-v3.js?v=20260920-3"></script>
+<script src="./data-store-v3.js?v=20260921-1"></script>
 <script>
 const categoryMap=[
  ["すべて",()=>true],
@@ -510,6 +463,8 @@ let mapCurrentMarker=null;
 let mapCurrentLatLng=null;
 let mapRunId=0;
 let CURRENT_MAP_ITEMS=[];
+let MAP_MARKER_POINTS=[];
+let mapRenderTimer=null;
 
 const MAP_ART={
  attraction:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="24" cy="8" r="4" fill="#ffd75a"/><path d="M4 25 14 10l5 7 3-4 7 12Z" fill="#fff"/><path d="m10 16 4-6 3 4-3 1-2-1Z" fill="#bdebd5"/></svg>`,
@@ -521,64 +476,44 @@ function escAttr(v){
  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 }
 function facilityPhotoUrl(item){
- const candidates=[
-   item?.image_url,
-   item?.imageUrl,
-   item?.photo_url,
-   item?.photoUrl,
-   item?.photo,
-   item?.image,
-   item?.thumbnail,
-   item?.thumb,
-   item?.imagePath
- ];
- for(const c of candidates){
-   const v=String(c||"").trim();
-   if(v) return v;
- }
+ const list=[item?.image_url,item?.imageUrl,item?.photo_url,item?.photoUrl,item?.photo,item?.image,item?.thumbnail,item?.thumb];
+ for(const x of list){const v=String(x||"").trim();if(v)return v;}
  return "";
 }
 function mapFacilityIcon(item){
  const photo=facilityPhotoUrl(item);
  const inner=photo
-   ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
-   : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
+  ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
+  : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
  return L.divIcon({
    className:"",
    html:`<div class="cute-pin facility ${photo?"has-photo":"no-photo"}"><div class="pin-circle">${inner}</div><div class="pin-tail"></div></div>`,
-   iconSize:[50,62],iconAnchor:[25,60],popupAnchor:[0,-54]
+   iconSize:[46,57],iconAnchor:[23,55],popupAnchor:[0,-50]
  });
 }
-function createClusterGroup(){
- return L.markerClusterGroup({
-   showCoverageOnHover:false,
-   spiderfyOnMaxZoom:true,
-   zoomToBoundsOnClick:true,
-   removeOutsideVisibleBounds:true,
-   maxClusterRadius:44,
-   disableClusteringAtZoom:16,
-   iconCreateFunction(cluster){
-     const count=cluster.getChildCount();
-     return L.divIcon({
-       html:`<div class="map-cluster"><span>${count}</span></div>`,
-       className:"",
-       iconSize:[54,54]
-     });
-   }
+function mapClusterIcon(count){
+ return L.divIcon({
+   className:"",
+   html:`<div class="map-cluster-pin"><span>${count}</span></div>`,
+   iconSize:[52,52],iconAnchor:[26,26]
  });
 }
 function mapCurrentIcon(){
  return L.divIcon({
    className:"",
    html:`<div class="cute-pin current"><div class="pin-circle"><svg viewBox="0 0 32 32"><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M8 27c1-6 4-9 8-9s7 3 8 9Z" fill="#fff"/></svg></div><div class="pin-tail"></div></div>`,
-   iconSize:[50,62],iconAnchor:[25,60],popupAnchor:[0,-54]
+   iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
  });
 }
 const FUJINOMIYA_CENTER=[35.245,138.615];
-const FUJINOMIYA_MAX_BOUNDS=L.latLngBounds(
-  [34.85,138.10],
-  [35.72,139.05]
-);
+const FUJINOMIYA_BOUNDS=[[34.85,138.10],[35.72,139.05]];
+function inMapBounds(c){
+ if(!Array.isArray(c)||c.length<2)return false;
+ const lat=Number(c[0]),lng=Number(c[1]);
+ return Number.isFinite(lat)&&Number.isFinite(lng)&&
+   lat>=FUJINOMIYA_BOUNDS[0][0]&&lat<=FUJINOMIYA_BOUNDS[1][0]&&
+   lng>=FUJINOMIYA_BOUNDS[0][1]&&lng<=FUJINOMIYA_BOUNDS[1][1];
+}
 
 function forceMapResize(){
  if(!appMap) return;
@@ -591,11 +526,17 @@ function forceMapResize(){
 
 function ensureFacilityMap(){
  if(appMap) return appMap;
+ if(!window.L){
+   const s=document.getElementById("mapStatus");
+   if(s)s.textContent="地図を読み込めませんでした。通信状態を確認して、もう一度『地図で見る』を押してください。";
+   return null;
+ }
+ const maxBounds=L.latLngBounds(FUJINOMIYA_BOUNDS[0],FUJINOMIYA_BOUNDS[1]);
  appMap=L.map("facilityMap",{
    zoomControl:true,
    minZoom:9,
    maxZoom:19,
-   maxBounds:FUJINOMIYA_MAX_BOUNDS,
+   maxBounds:maxBounds,
    maxBoundsViscosity:0.15,
    worldCopyJump:false,
    dragging:true,
@@ -612,24 +553,67 @@ function ensureFacilityMap(){
    zoomDelta:0.5
  }).setView(FUJINOMIYA_CENTER,11);
 
- const tileLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-   minZoom:9,
-   maxZoom:19,
-   tileSize:256,
-   noWrap:true,
-   keepBuffer:4,
-   updateWhenIdle:false,
-   updateWhenZooming:true,
-   crossOrigin:true,
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   minZoom:9,maxZoom:19,tileSize:256,noWrap:true,keepBuffer:4,
+   updateWhenIdle:true,updateWhenZooming:false,crossOrigin:true,
    attribution:"&copy; OpenStreetMap contributors"
  }).addTo(appMap);
 
- appMap.setMaxBounds(FUJINOMIYA_MAX_BOUNDS);
- mapFacilityLayer=createClusterGroup().addTo(appMap);
-
-
+ mapFacilityLayer=L.layerGroup().addTo(appMap);
+ const rerender=()=>{
+   if(mapRenderTimer)clearTimeout(mapRenderTimer);
+   mapRenderTimer=setTimeout(()=>renderClusteredMarkers(),45);
+ };
+ appMap.on("zoomend moveend",rerender);
  forceMapResize();
  return appMap;
+}
+function renderClusteredMarkers(){
+ if(!appMap||!mapFacilityLayer||!window.L)return;
+ mapFacilityLayer.clearLayers();
+ const points=(MAP_MARKER_POINTS||[]).filter(p=>p&&inMapBounds(p.c));
+ if(!points.length)return;
+ const zoom=appMap.getZoom();
+ const radius=zoom>=16?28:zoom>=14?42:zoom>=12?52:62;
+ const clusters=[];
+
+ for(const entry of points){
+   const px=appMap.project(L.latLng(entry.c[0],entry.c[1]),zoom);
+   let best=null,bestDist=Infinity;
+   for(const cl of clusters){
+     const dx=px.x-cl.x,dy=px.y-cl.y;
+     const d=Math.sqrt(dx*dx+dy*dy);
+     if(d<=radius&&d<bestDist){best=cl;bestDist=d;}
+   }
+   if(best){
+     best.items.push(entry);
+     best.x=(best.x*(best.items.length-1)+px.x)/best.items.length;
+     best.y=(best.y*(best.items.length-1)+px.y)/best.items.length;
+   }else{
+     clusters.push({items:[entry],x:px.x,y:px.y});
+   }
+ }
+
+ for(const cl of clusters){
+   if(cl.items.length===1){
+     const e=cl.items[0];
+     L.marker(e.c,{icon:mapFacilityIcon(e.item),zIndexOffset:500})
+      .addTo(mapFacilityLayer).bindPopup(popupHtml(e.item));
+     continue;
+   }
+   let lat=0,lng=0;
+   for(const e of cl.items){lat+=e.c[0];lng+=e.c[1];}
+   const center=[lat/cl.items.length,lng/cl.items.length];
+   const marker=L.marker(center,{icon:mapClusterIcon(cl.items.length),zIndexOffset:450}).addTo(mapFacilityLayer);
+   marker.on("click",()=>{
+     const childBounds=L.latLngBounds(cl.items.map(e=>e.c));
+     if(childBounds.isValid()){
+       appMap.fitBounds(childBounds,{padding:[45,45],maxZoom:Math.min(18,zoom+2)});
+     }else{
+       appMap.setView(center,Math.min(18,zoom+2));
+     }
+   });
+ }
 }
 function mapAddress(item){
  const a=String(item.address||"").trim();
@@ -663,8 +647,8 @@ function popupHtml(item){
 }
 function fitFacilityMap(bounds){
  if(!appMap) return;
- const all=[...bounds].filter(c=>FUJINOMIYA_MAX_BOUNDS.contains(c));
- if(mapCurrentLatLng && FUJINOMIYA_MAX_BOUNDS.contains(mapCurrentLatLng)) all.push(mapCurrentLatLng);
+ const all=[...bounds].filter(c=>inMapBounds(c));
+ if(mapCurrentLatLng && inMapBounds(mapCurrentLatLng)) all.push(mapCurrentLatLng);
 
  if(all.length===1){
    appMap.setView(all[0],15);
@@ -673,7 +657,7 @@ function fitFacilityMap(bounds){
  }else{
    appMap.setView(FUJINOMIYA_CENTER,11);
  }
- appMap.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:false});
+ 
  forceMapResize();
  setTimeout(()=>{
    try{
@@ -684,49 +668,42 @@ function fitFacilityMap(bounds){
  },120);
 }
 async function refreshFacilityMap(items){
- if(!mapVisible||!window.L) return;
+ if(!mapVisible) return;
  const run=++mapRunId;
  const map=ensureFacilityMap();
+ if(!map) return;
  mapFacilityLayer.clearLayers();
+ MAP_MARKER_POINTS=[];
 
  const list=(items||[]);
  const bounds=[];
  const status=document.getElementById("mapStatus");
- status.textContent=`施設位置を確認中… 0 / ${list.length}`;
-
- let done=0;
- let plotted=0;
- let nextIndex=0;
+ if(status)status.textContent=`施設位置を確認中… 0 / ${list.length}`;
+ let done=0,plotted=0,nextIndex=0;
  const workerCount=Math.min(6,Math.max(1,list.length));
 
  async function worker(){
    while(true){
      const i=nextIndex++;
-     if(i>=list.length||run!==mapRunId) return;
+     if(i>=list.length||run!==mapRunId)return;
      const item=list[i];
      const c=await coordsForMap(item);
-     if(run!==mapRunId) return;
-
+     if(run!==mapRunId)return;
      done++;
-     if(c && FUJINOMIYA_MAX_BOUNDS.contains(c)){
-       bounds.push(c);
-       plotted++;
-       L.marker(c,{icon:mapFacilityIcon(item)})
-        .addTo(mapFacilityLayer)
-        .bindPopup(popupHtml(item));
+     if(c&&inMapBounds(c)){
+       bounds.push(c);plotted++;
+       MAP_MARKER_POINTS.push({item,c});
      }
-
-     if(done===list.length || done%10===0){
-       status.textContent=`施設位置を確認中… ${done} / ${list.length}（ピン ${plotted}件）`;
+     if(status&&(done===list.length||done%25===0)){
+       status.textContent=`施設位置を確認中… ${done} / ${list.length}（施設 ${plotted}件）`;
      }
    }
  }
-
  await Promise.all(Array.from({length:workerCount},()=>worker()));
- if(run!==mapRunId) return;
-
+ if(run!==mapRunId)return;
+ renderClusteredMarkers();
  fitFacilityMap(bounds);
- status.textContent=`このページの該当施設 ${list.length}件中、位置を確認できた ${plotted}件を地図に表示しています。`;
+ if(status)status.textContent=`このページの該当施設 ${list.length}件中、${plotted}件を地図に表示しています。近い施設は数字でまとめています。`;
  forceMapResize();
 }
 function locateCurrentOnMap({move=true}={}){
@@ -744,13 +721,13 @@ function locateCurrentOnMap({move=true}={}){
       .addTo(map).bindPopup("<strong>現在地</strong>");
 
    if(move){
-     if(FUJINOMIYA_MAX_BOUNDS.contains(c)){
+     if(inMapBounds(c)){
        map.setView(c,15,{animate:true});
        setTimeout(()=>mapCurrentMarker&&mapCurrentMarker.openPopup(),250);
      }else{
        const s=document.getElementById("mapStatus");
        if(s) s.textContent="現在地は富士宮市周辺の地図表示範囲外です。";
-       map.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:true});
+       
      }
    }
 

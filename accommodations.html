@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#244f78">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <title>富士宮 宿泊施設検索｜ふじのみや旅ナビ</title>
 <style>
 :root{--blue:#2b6898;--blue2:#234f74;--ink:#173449;--line:rgba(255,255,255,.38)}
@@ -399,64 +397,20 @@ footer a{color:#fff}
 }
 
 
-/* Cluster + photo pin styles */
-.leaflet-div-icon{background:transparent;border:none}
-.map-cluster{
- width:54px;height:54px;border-radius:50%;
+/* Stable built-in cluster + facility-photo pin */
+.map-cluster-pin{
+ width:52px;height:52px;border-radius:50%;
  display:grid;place-items:center;
- background:radial-gradient(circle at 35% 35%, #69d8a6 0%, #15945f 58%, #0d6c47 100%);
+ background:linear-gradient(145deg,#38b97f,#0b7652);
  border:4px solid #fff;
- color:#fff;
- font-weight:900;
- font-size:17px;
- box-shadow:0 8px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.35);
+ box-shadow:0 6px 16px rgba(0,0,0,.25);
+ color:#fff;font-size:17px;font-weight:900;
 }
-.map-cluster span{
- display:inline-block;
- min-width:28px;
- text-align:center;
- line-height:1;
-}
-.cute-pin{
- position:relative!important;
- width:50px!important;
- height:62px!important;
- display:block!important;
- filter:drop-shadow(0 6px 10px rgba(0,0,0,.28));
-}
-.cute-pin .pin-circle{
- width:48px;height:48px;border-radius:50%;
- display:grid;place-items:center;
- border:3px solid #fff;position:relative;z-index:2;
- overflow:hidden;
- box-shadow:0 2px 8px rgba(0,0,0,.18) inset;
- background:#15945f;
-}
-.cute-pin .pin-tail{
- position:absolute;left:17px;top:38px;width:16px;height:16px;
- transform:rotate(45deg);
- border-right:3px solid #fff;border-bottom:3px solid #fff;z-index:1;
- background:#15945f;
-}
-.cute-pin.current .pin-circle,.cute-pin.current .pin-tail{background:#2186df}
-.cute-pin.facility.has-photo .pin-circle{
- background:#ffffff;
-}
-.cute-pin.facility.has-photo .pin-tail{
- background:#1e8b60;
-}
-.cute-pin .pin-photo{
- width:100%;height:100%;
- object-fit:cover;
- display:block;
-}
-.cute-pin .pin-fallback{
- width:100%;height:100%;
- display:grid;place-items:center;
- background:linear-gradient(180deg,#29b377 0%,#15945f 100%);
-}
-.cute-pin .pin-fallback svg{width:28px;height:28px;display:block}
-.cute-pin svg{width:24px;height:24px;display:block}
+.map-cluster-pin span{line-height:1;min-width:24px;text-align:center}
+.cute-pin.facility.has-photo .pin-circle{background:#fff;overflow:hidden}
+.cute-pin.facility.has-photo .pin-tail{background:#15945f}
+.cute-pin .pin-photo{width:100%;height:100%;object-fit:cover;display:block}
+.cute-pin .pin-fallback{width:100%;height:100%;display:grid;place-items:center;background:#15945f}
 
 </style>
 </head>
@@ -515,11 +469,10 @@ footer a{color:#fff}
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
- integrity="sha256-20nQCchB9co0qIjZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+ integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./app-config.js"></script>
-<script src="./data-store-v3.js?v=20260920-3"></script>
+<script src="./data-store-v3.js?v=20260921-1"></script>
 <script>
 const FALLBACK_ACCOMMODATIONS=[{"id":"accommodation-001","name":"割烹旅館 小川荘","address":"静岡県富士宮市大宮町10-1","phone":"0544-26-2197","description":"富士山本宮浅間大社の門前町にある老舗の料理旅館。四季の素材を使う懐石料理を中心に、日本旅館らしい落ち着いた客室と、天候時に富士山を望める露天風呂を備える。市街地観光と食事を重視する滞在に向く。"},{"id":"accommodation-002","name":"かめや旅館","address":"静岡県富士宮市大宮町23-6","phone":"0544-27-0061","description":"JR富士宮駅から徒歩圏の地域旅館。客室や最上階の展望風呂から富士山を望め、富士山世界遺産センターや浅間大社にも近い。観光・登山・出張・スポーツ合宿に対応し、地元食材を使った料理も提供する。"},{"id":"accommodation-003","name":"高原ホテル ニュー富士","address":"静岡県富士宮市人穴142-62","phone":"0544-52-0106","description":"朝霧高原の自然の中に建つ独立系ホテル。客室から富士山を眺められる立地を生かし、地元食材を取り入れたレストラン料理を提供する。観光だけでなく、研修・セミナー利用にも対応している。"},{"id":"accommodation-004","name":"スポーツビレッジ 村山ジャンボ","address":"静岡県富士宮市村山1071-2","phone":"0544-27-8438","description":"広い敷地にスポーツ・レジャー設備と宿泊機能を備えた合宿型施設。団体で体を動かした後に利用できる岩風呂や、季節に応じたバーベキュー・鍋料理などが特徴で、学校・クラブ・グループ旅行に向く。"},{"id":"accommodation-005","name":"割烹旅館 たちばな","address":"静岡県富士宮市野中1085-4","phone":"0544-27-7000","description":"富士宮市街を見下ろす高台の料理旅館。各客室から富士山の稜線や駿河湾方面の眺望を楽しめるよう設計され、景色と会席料理を重視した滞在に適する。宴会・会食を伴う宿泊にも対応する。"},{"id":"accommodation-006","name":"富士宮グリーンホテル","address":"静岡県富士宮市東町23-18","phone":"0544-23-1919","description":"JR富士宮駅前にある地域経営のビジネスホテル。鉄道利用の出張や市街地観光の拠点に便利で、全室Wi-Fiを備える。館内の和食処では地元食材を使った料理を扱い、簡単な軽食サービスも案内している。"},{"id":"accommodation-007","name":"丸石寿司料理旅館","address":"静岡県富士宮市宮町10-1","phone":"0544-27-2359","description":"寿司・和食店を併設する料理旅館。昼食や夕食、宴会だけでなく、企業・学校関係・観光客の宿泊を電話予約で受け付ける。浅間大社周辺を歩いて回りやすく、食事付きの市街地滞在に向く。"},{"id":"accommodation-008","name":"瓜島温泉 翠紅苑さくら","address":"静岡県富士宮市内房385","phone":"0544-65-0366","description":"明治7年創業、全4室の静かな温泉宿。日本庭園と季節の景観、貸切で楽しむ岩風呂・栢ノ木風呂、駿河湾の魚介と地元食材を使う海鮮会席が特徴。日帰り入浴は行わず、少人数の宿泊客に絞っている。"},{"id":"accommodation-009","name":"キャビンハウス ヤド 富士宮店","address":"静岡県富士宮市大宮町11-18","phone":"0544-23-4180","description":"市街地にある小規模なコンパクトホテル。必要な機能に絞ったキャビン型の客室と、和の雰囲気を取り入れた落ち着いた共用空間が特徴。浅間大社周辺の散策や低予算の一人旅、短期滞在に使いやすい。"},{"id":"accommodation-010","name":"GOTEN TOMOE residence","address":"静岡県富士宮市中央町10-8","phone":"0544-66-3190","description":"築約90年の木造住宅を改修した一日一組限定の一棟貸しヴィラ。約96平方メートルの和風空間を2～8人で利用でき、家族や友人だけで滞在できる。富士宮駅・浅間大社・世界遺産センターが徒歩圏にある。"},{"id":"accommodation-011","name":"民宿 水口屋","address":"静岡県富士宮市猪之頭854-4","phone":"0544-52-0070","description":"朝霧高原の猪之頭地区にある家庭的な民宿。富士山の雪解け水で育てた新鮮なマス料理を看板とし、定員は23人。田貫湖や朝霧高原の自然観光、釣りやハイキングの拠点に向く。"},{"id":"accommodation-012","name":"民宿旅館 中京","address":"静岡県富士宮市下条309-2","phone":"0544-58-0040","description":"富士山を望む北部地区の民宿旅館。24時間利用できる天然鉱石温泉、客室の無料インターネット、無料洗濯機など長めの滞在や合宿に便利な設備を備える。徒歩圏にコンビニやスーパーもある。"},{"id":"accommodation-013","name":"民宿・旅館 西の家","address":"静岡県富士宮市上井出1774","phone":"0544-54-0277","description":"白糸の滝に近い民宿旅館。富士登山・朝霧高原・富士五湖方面の観光拠点として使え、フットサルコートと天然芝サッカー場を備える。大人数のスポーツ合宿、サイクリングやオリエンテーリングにも対応する。"},{"id":"accommodation-014","name":"SLEEEP.jp fujinomiya","address":"静岡県富士宮市大宮町32-15","phone":"050-5532-2884","description":"JR富士宮駅から徒歩約2分のIoTカプセル型宿泊施設。ミニマルで環境負荷を抑えた滞在を掲げ、コンパクトながら睡眠の質を重視した設備を導入している。駅前で気軽に泊まりたい一人旅や短期滞在向け。"},{"id":"accommodation-015","name":"MUKUten.舎 富士宮","address":"静岡県富士宮市宮町5-34","phone":"0544-22-6910","description":"一日一組限定のまちなかリトリートホテル。希少な国産天然木を生かしたプリミティブモダンの客室とラウンジギャラリーを備える。浅間大社周辺の町歩きと、静かで私的な滞在を組み合わせたい旅行者に向く。"},{"id":"accommodation-016","name":"ゲストハウスハイネ北山","address":"静岡県富士宮市北山1525-5","phone":"090-3265-9127","description":"大石寺に近い北山地区の小規模ゲストハウス。個人客一人から利用できる地域密着型の民泊で、寺院訪問や富士宮北部の滞在拠点として使いやすい。予約方法や設備は事前に電話確認するのが確実。"},{"id":"accommodation-017","name":"ていし八","address":"静岡県富士宮市下条1001","phone":"070-8355-0548","description":"富士山麓の下条地区にある小規模民泊。完全禁煙と事業ごみゼロへの取り組みを掲げる環境配慮型の宿で、行楽・避暑・保養など静かな滞在を想定している。利用条件は予約時の確認が必要。"},{"id":"accommodation-018","name":"なか富士","address":"静岡県富士宮市猪之頭2166-4","phone":"050-8887-2273","description":"標高約700メートルの自然の中に3棟だけを設けた貸別荘型の宿。全棟から遮るものの少ない富士山を望み、アメリカンヴィンテージと和モダンの異なる内装を選べる。敷地内散策路があり、棟ごとの貸切にも対応する。"},{"id":"accommodation-019","name":"旅館ほし山","address":"静岡県富士宮市星山84-2","phone":"0544-26-3608","description":"緑に囲まれた静かな地域旅館。大風呂「弘法の湯」とバーベキュー場を備え、収容人数は約62人。スポーツ施設の予約代行や送迎にも対応し、学生・社会人の合宿や団体旅行に適している。"},{"id":"accommodation-020","name":"民宿旅館 明石","address":"静岡県富士宮市上条1070-1","phone":"0544-58-3755","description":"白糸の滝、田貫湖、富士登山などへの移動に便利な北部の民宿旅館。富士山を望める客室を複数備え、観光客のほかグループ・合宿利用にも対応する、家庭的な滞在拠点。"},{"id":"accommodation-021","name":"芝川苑","address":"静岡県富士宮市内房919-1","phone":"0544-65-0542","description":"芝川・内房地区の緑豊かな環境にある和風の宿。日本庭園を眺めながら落ち着いて過ごせ、四季の素材を生かした料理を提供する。市街地の喧騒を離れた保養や家族旅行、会食を伴う宿泊に向く。"},{"id":"accommodation-022","name":"MT. FUJI SATOYAMA VACATION","address":"静岡県富士宮市狩宿8-2","phone":"0544-66-5722","description":"「和」と里山文化をテーマにした少人数制のグランピング施設。SDGsを意識した施設づくりを行い、地域住民や自然との出会いを組み込むエコツアーも実施する。富士山を眺めながら体験型の滞在をしたい人向け。"},{"id":"accommodation-023","name":"朝霧ジャンボリーオートキャンプ場","address":"静岡県富士宮市猪之頭1162-3","phone":"0544-52-2066","description":"朝霧高原の広大な芝地に車で乗り入れられるオートフリーサイト。富士山の眺望、地下約180メートルから汲み上げる天然水、電源付き・プレミアムサイト、充実したレンタルが特徴で、初心者から長期滞在まで対応する。"},{"id":"accommodation-024","name":"田貫湖キャンプ場（南テントサイト）","address":"静岡県富士宮市佐折634-1","phone":"090-4234-8039／0544-52-0155","description":"田貫湖畔の全面芝生テントサイト。炊飯棟、トイレ、温水シャワーを備え、周遊散策・自転車・ボート・釣りも楽しめる。宿泊は予約制で、南側管理棟「瓔珞の家」が受付・売店・軽食営業を担う。"},{"id":"accommodation-025","name":"天子の森オートキャンプ場","address":"静岡県富士宮市佐折631","phone":"0544-54-1543","description":"天子ヶ岳の自然と川に近いオートキャンプ場。テント泊、車を横付けする区画、川遊びを中心に、静かな森林環境で過ごせる。例年4月から11月末ごろまでの季節営業で、営業日と予約状況の事前確認が必要。"},{"id":"accommodation-026","name":"ACN西富士オートキャンプ場","address":"静岡県富士宮市内野1687","phone":"0544-54-1947","description":"朝霧高原南端、標高約630メートルの野鳥の森にあるキャンプ場。東に富士山、西に天子ヶ岳を望み、場内の湧水や芝川への散策を楽しめる。静かな林間環境と県道からのアクセスの良さを両立している。"},{"id":"accommodation-027","name":"富士オートキャンプ場 ふもと村","address":"静岡県富士宮市麓174-1","phone":"0544-52-1220","description":"富士山麓の林間に約62区画を設けるオートキャンプ場。木々に囲まれた環境で、車をサイト近くに置いてキャンプを楽しめる。例年4月から11月上旬ごろまでの季節営業で、夏の避暑や家族キャンプに向く。"},{"id":"accommodation-028","name":"ペンギン村オートキャンプ場","address":"静岡県富士宮市猪之頭2351","phone":"090-7680-3286","description":"猪之頭の湧水と自然に恵まれた小規模なオートキャンプ場。場内の水辺と静かな林間環境を生かし、落ち着いてテント泊を楽しみたい家族や少人数グループに向く。予約・営業状況は電話での確認が確実。"},{"id":"accommodation-029","name":"ふもとっぱら","address":"静岡県富士宮市麓156","phone":"0544-52-2112","description":"富士山を正面に望む広大な草原で知られる地域運営のキャンプ・宿泊施設。フリーサイトでのテント泊やデイキャンプに加え、森のコテージにも宿泊できる。開放的な景観、星空、日の出を目的とする滞在に人気がある。"},{"id":"accommodation-030","name":"富士山ワイルドアドベンチャー（FWA）","address":"静岡県富士宮市上井出2753-2","phone":"0544-54-1705","description":"富士山を望むキャンプサイトに、アスレチックや動物とのふれあい、バーベキューを組み合わせた体験型施設。テント泊だけでなく約25室の宿泊棟があり、家族用の大和室・大洋室も選べる。"},{"id":"accommodation-031","name":"Field Dogs Garden","address":"静岡県富士宮市猪之頭字人穴道1816-9","phone":"0544-29-5211","description":"富士山を望む広いドッグランを中心に、犬と泊まれるキャンプサイトとロッジを備える複合施設。小型犬専用・貸切エリア、ドッグカフェ、ショップ、トリミングもあり、愛犬と一日を通して過ごしたい旅行者向け。"},{"id":"accommodation-032","name":"富士山YMCAグローバル・エコ・ヴィレッジ","address":"静岡県富士宮市原1423","phone":"0544-54-1151","description":"朝霧高原の広い草原を生かした野外教育・宿泊施設。宿泊棟とテント泊に対応し、家族・グループの自然体験、青少年活動、学校行事、企業研修などに利用される。一般観光宿とは利用趣旨やルールが異なるため事前確認が必要。"},{"id":"accommodation-033","name":"新富士オートキャンプ場","address":"静岡県富士宮市北山字鞍骨7430","phone":"0544-54-2838","description":"富士山麓の北山地区にある林間型オートキャンプ場。区画サイトに車を乗り入れて滞在でき、トイレやシャワーなどの基本設備を備える。木立に囲まれた環境で、夏のキャンプや家族・グループ利用に向く。"},{"id":"accommodation-034","name":"朝霧高原 英知の杜キャンプ場","address":"静岡県富士宮市根原71-3","phone":"0544-52-1616","description":"標高約900メートルの朝霧高原・根原地区にあるキャンプ場。富士山麓の静かな環境でデジタル機器から離れて過ごすことを掲げ、ソロからグループまで利用できる。通年営業の案内があるが、天候・営業日は要確認。"},{"id":"accommodation-035","name":"朝霧Camp Base そらいろ","address":"静岡県富士宮市麓624-7","phone":"0544-21-3955","description":"標高約800メートルの朝霧高原にあるオートキャンプ場。富士山と広い空を望む開放的なフリーサイトを中心に、ドライブの目的地・出発点となる滞在を提案する。季節の催しや営業情報は公式案内で確認できる。"},{"id":"accommodation-036","name":"富士ミルクランド 富士朝霧高原ロッジ・キャンプ場","address":"静岡県富士宮市上井出3690","phone":"0544-54-3690","description":"牧場型観光施設に併設された二階建てロッジとキャンプ場。ロッジはキッチン家電や調理器具を備え、ペット同伴可能な客室もある。動物とのふれあい、乳製品、バーベキューと宿泊を一か所で楽しみやすい。"},{"id":"accommodation-037","name":"休暇村富士","address":"静岡県富士宮市佐折634","phone":"0544-54-5200","description":"田貫湖の西岸に位置し、館内や全客室から富士山を望めるリゾート型宿泊施設。弱アルカリ性の温泉大浴場、地元食材を取り入れた食事、約60室の客室を備えるほか、ホテルから徒歩数分の貸別荘型コテージも利用できる。湖畔散策、展望デッキ、ダイヤモンド富士の観賞など、田貫湖周辺の自然を楽しむ滞在拠点に適している。"}];
 let ACCOMMODATIONS=[...FALLBACK_ACCOMMODATIONS];
@@ -537,6 +490,8 @@ let mapCurrentMarker=null;
 let mapCurrentLatLng=null;
 let mapRunId=0;
 let CURRENT_MAP_ITEMS=[];
+let MAP_MARKER_POINTS=[];
+let mapRenderTimer=null;
 
 const MAP_ART={
  attraction:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="24" cy="8" r="4" fill="#ffd75a"/><path d="M4 25 14 10l5 7 3-4 7 12Z" fill="#fff"/><path d="m10 16 4-6 3 4-3 1-2-1Z" fill="#bdebd5"/></svg>`,
@@ -548,64 +503,44 @@ function escAttr(v){
  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 }
 function facilityPhotoUrl(item){
- const candidates=[
-   item?.image_url,
-   item?.imageUrl,
-   item?.photo_url,
-   item?.photoUrl,
-   item?.photo,
-   item?.image,
-   item?.thumbnail,
-   item?.thumb,
-   item?.imagePath
- ];
- for(const c of candidates){
-   const v=String(c||"").trim();
-   if(v) return v;
- }
+ const list=[item?.image_url,item?.imageUrl,item?.photo_url,item?.photoUrl,item?.photo,item?.image,item?.thumbnail,item?.thumb];
+ for(const x of list){const v=String(x||"").trim();if(v)return v;}
  return "";
 }
 function mapFacilityIcon(item){
  const photo=facilityPhotoUrl(item);
  const inner=photo
-   ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
-   : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
+  ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
+  : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
  return L.divIcon({
    className:"",
    html:`<div class="cute-pin facility ${photo?"has-photo":"no-photo"}"><div class="pin-circle">${inner}</div><div class="pin-tail"></div></div>`,
-   iconSize:[50,62],iconAnchor:[25,60],popupAnchor:[0,-54]
+   iconSize:[46,57],iconAnchor:[23,55],popupAnchor:[0,-50]
  });
 }
-function createClusterGroup(){
- return L.markerClusterGroup({
-   showCoverageOnHover:false,
-   spiderfyOnMaxZoom:true,
-   zoomToBoundsOnClick:true,
-   removeOutsideVisibleBounds:true,
-   maxClusterRadius:44,
-   disableClusteringAtZoom:16,
-   iconCreateFunction(cluster){
-     const count=cluster.getChildCount();
-     return L.divIcon({
-       html:`<div class="map-cluster"><span>${count}</span></div>`,
-       className:"",
-       iconSize:[54,54]
-     });
-   }
+function mapClusterIcon(count){
+ return L.divIcon({
+   className:"",
+   html:`<div class="map-cluster-pin"><span>${count}</span></div>`,
+   iconSize:[52,52],iconAnchor:[26,26]
  });
 }
 function mapCurrentIcon(){
  return L.divIcon({
    className:"",
    html:`<div class="cute-pin current"><div class="pin-circle"><svg viewBox="0 0 32 32"><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M8 27c1-6 4-9 8-9s7 3 8 9Z" fill="#fff"/></svg></div><div class="pin-tail"></div></div>`,
-   iconSize:[50,62],iconAnchor:[25,60],popupAnchor:[0,-54]
+   iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
  });
 }
 const FUJINOMIYA_CENTER=[35.245,138.615];
-const FUJINOMIYA_MAX_BOUNDS=L.latLngBounds(
-  [34.85,138.10],
-  [35.72,139.05]
-);
+const FUJINOMIYA_BOUNDS=[[34.85,138.10],[35.72,139.05]];
+function inMapBounds(c){
+ if(!Array.isArray(c)||c.length<2)return false;
+ const lat=Number(c[0]),lng=Number(c[1]);
+ return Number.isFinite(lat)&&Number.isFinite(lng)&&
+   lat>=FUJINOMIYA_BOUNDS[0][0]&&lat<=FUJINOMIYA_BOUNDS[1][0]&&
+   lng>=FUJINOMIYA_BOUNDS[0][1]&&lng<=FUJINOMIYA_BOUNDS[1][1];
+}
 
 function forceMapResize(){
  if(!appMap) return;
@@ -618,11 +553,17 @@ function forceMapResize(){
 
 function ensureFacilityMap(){
  if(appMap) return appMap;
+ if(!window.L){
+   const s=document.getElementById("mapStatus");
+   if(s)s.textContent="地図を読み込めませんでした。通信状態を確認して、もう一度『地図で見る』を押してください。";
+   return null;
+ }
+ const maxBounds=L.latLngBounds(FUJINOMIYA_BOUNDS[0],FUJINOMIYA_BOUNDS[1]);
  appMap=L.map("facilityMap",{
    zoomControl:true,
    minZoom:9,
    maxZoom:19,
-   maxBounds:FUJINOMIYA_MAX_BOUNDS,
+   maxBounds:maxBounds,
    maxBoundsViscosity:0.15,
    worldCopyJump:false,
    dragging:true,
@@ -639,24 +580,67 @@ function ensureFacilityMap(){
    zoomDelta:0.5
  }).setView(FUJINOMIYA_CENTER,11);
 
- const tileLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-   minZoom:9,
-   maxZoom:19,
-   tileSize:256,
-   noWrap:true,
-   keepBuffer:4,
-   updateWhenIdle:false,
-   updateWhenZooming:true,
-   crossOrigin:true,
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+   minZoom:9,maxZoom:19,tileSize:256,noWrap:true,keepBuffer:4,
+   updateWhenIdle:true,updateWhenZooming:false,crossOrigin:true,
    attribution:"&copy; OpenStreetMap contributors"
  }).addTo(appMap);
 
- appMap.setMaxBounds(FUJINOMIYA_MAX_BOUNDS);
- mapFacilityLayer=createClusterGroup().addTo(appMap);
-
-
+ mapFacilityLayer=L.layerGroup().addTo(appMap);
+ const rerender=()=>{
+   if(mapRenderTimer)clearTimeout(mapRenderTimer);
+   mapRenderTimer=setTimeout(()=>renderClusteredMarkers(),45);
+ };
+ appMap.on("zoomend moveend",rerender);
  forceMapResize();
  return appMap;
+}
+function renderClusteredMarkers(){
+ if(!appMap||!mapFacilityLayer||!window.L)return;
+ mapFacilityLayer.clearLayers();
+ const points=(MAP_MARKER_POINTS||[]).filter(p=>p&&inMapBounds(p.c));
+ if(!points.length)return;
+ const zoom=appMap.getZoom();
+ const radius=zoom>=16?28:zoom>=14?42:zoom>=12?52:62;
+ const clusters=[];
+
+ for(const entry of points){
+   const px=appMap.project(L.latLng(entry.c[0],entry.c[1]),zoom);
+   let best=null,bestDist=Infinity;
+   for(const cl of clusters){
+     const dx=px.x-cl.x,dy=px.y-cl.y;
+     const d=Math.sqrt(dx*dx+dy*dy);
+     if(d<=radius&&d<bestDist){best=cl;bestDist=d;}
+   }
+   if(best){
+     best.items.push(entry);
+     best.x=(best.x*(best.items.length-1)+px.x)/best.items.length;
+     best.y=(best.y*(best.items.length-1)+px.y)/best.items.length;
+   }else{
+     clusters.push({items:[entry],x:px.x,y:px.y});
+   }
+ }
+
+ for(const cl of clusters){
+   if(cl.items.length===1){
+     const e=cl.items[0];
+     L.marker(e.c,{icon:mapFacilityIcon(e.item),zIndexOffset:500})
+      .addTo(mapFacilityLayer).bindPopup(popupHtml(e.item));
+     continue;
+   }
+   let lat=0,lng=0;
+   for(const e of cl.items){lat+=e.c[0];lng+=e.c[1];}
+   const center=[lat/cl.items.length,lng/cl.items.length];
+   const marker=L.marker(center,{icon:mapClusterIcon(cl.items.length),zIndexOffset:450}).addTo(mapFacilityLayer);
+   marker.on("click",()=>{
+     const childBounds=L.latLngBounds(cl.items.map(e=>e.c));
+     if(childBounds.isValid()){
+       appMap.fitBounds(childBounds,{padding:[45,45],maxZoom:Math.min(18,zoom+2)});
+     }else{
+       appMap.setView(center,Math.min(18,zoom+2));
+     }
+   });
+ }
 }
 function mapAddress(item){
  const a=String(item.address||"").trim();
@@ -690,8 +674,8 @@ function popupHtml(item){
 }
 function fitFacilityMap(bounds){
  if(!appMap) return;
- const all=[...bounds].filter(c=>FUJINOMIYA_MAX_BOUNDS.contains(c));
- if(mapCurrentLatLng && FUJINOMIYA_MAX_BOUNDS.contains(mapCurrentLatLng)) all.push(mapCurrentLatLng);
+ const all=[...bounds].filter(c=>inMapBounds(c));
+ if(mapCurrentLatLng && inMapBounds(mapCurrentLatLng)) all.push(mapCurrentLatLng);
 
  if(all.length===1){
    appMap.setView(all[0],15);
@@ -700,7 +684,7 @@ function fitFacilityMap(bounds){
  }else{
    appMap.setView(FUJINOMIYA_CENTER,11);
  }
- appMap.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:false});
+ 
  forceMapResize();
  setTimeout(()=>{
    try{
@@ -711,49 +695,42 @@ function fitFacilityMap(bounds){
  },120);
 }
 async function refreshFacilityMap(items){
- if(!mapVisible||!window.L) return;
+ if(!mapVisible) return;
  const run=++mapRunId;
  const map=ensureFacilityMap();
+ if(!map) return;
  mapFacilityLayer.clearLayers();
+ MAP_MARKER_POINTS=[];
 
  const list=(items||[]);
  const bounds=[];
  const status=document.getElementById("mapStatus");
- status.textContent=`施設位置を確認中… 0 / ${list.length}`;
-
- let done=0;
- let plotted=0;
- let nextIndex=0;
+ if(status)status.textContent=`施設位置を確認中… 0 / ${list.length}`;
+ let done=0,plotted=0,nextIndex=0;
  const workerCount=Math.min(6,Math.max(1,list.length));
 
  async function worker(){
    while(true){
      const i=nextIndex++;
-     if(i>=list.length||run!==mapRunId) return;
+     if(i>=list.length||run!==mapRunId)return;
      const item=list[i];
      const c=await coordsForMap(item);
-     if(run!==mapRunId) return;
-
+     if(run!==mapRunId)return;
      done++;
-     if(c && FUJINOMIYA_MAX_BOUNDS.contains(c)){
-       bounds.push(c);
-       plotted++;
-       L.marker(c,{icon:mapFacilityIcon(item)})
-        .addTo(mapFacilityLayer)
-        .bindPopup(popupHtml(item));
+     if(c&&inMapBounds(c)){
+       bounds.push(c);plotted++;
+       MAP_MARKER_POINTS.push({item,c});
      }
-
-     if(done===list.length || done%10===0){
-       status.textContent=`施設位置を確認中… ${done} / ${list.length}（ピン ${plotted}件）`;
+     if(status&&(done===list.length||done%25===0)){
+       status.textContent=`施設位置を確認中… ${done} / ${list.length}（施設 ${plotted}件）`;
      }
    }
  }
-
  await Promise.all(Array.from({length:workerCount},()=>worker()));
- if(run!==mapRunId) return;
-
+ if(run!==mapRunId)return;
+ renderClusteredMarkers();
  fitFacilityMap(bounds);
- status.textContent=`このページの該当施設 ${list.length}件中、位置を確認できた ${plotted}件を地図に表示しています。`;
+ if(status)status.textContent=`このページの該当施設 ${list.length}件中、${plotted}件を地図に表示しています。近い施設は数字でまとめています。`;
  forceMapResize();
 }
 function locateCurrentOnMap({move=true}={}){
@@ -771,13 +748,13 @@ function locateCurrentOnMap({move=true}={}){
       .addTo(map).bindPopup("<strong>現在地</strong>");
 
    if(move){
-     if(FUJINOMIYA_MAX_BOUNDS.contains(c)){
+     if(inMapBounds(c)){
        map.setView(c,15,{animate:true});
        setTimeout(()=>mapCurrentMarker&&mapCurrentMarker.openPopup(),250);
      }else{
        const s=document.getElementById("mapStatus");
        if(s) s.textContent="現在地は富士宮市周辺の地図表示範囲外です。";
-       map.panInsideBounds(FUJINOMIYA_MAX_BOUNDS,{animate:true});
+       
      }
    }
 
