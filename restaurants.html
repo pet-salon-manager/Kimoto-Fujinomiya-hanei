@@ -418,6 +418,20 @@ footer a{color:#fff}
 .cute-pin .pin-photo{width:100%;height:100%;object-fit:cover;display:block}
 .cute-pin .pin-fallback{width:100%;height:100%;display:grid;place-items:center;background:#15945f}
 
+
+/* Restored simple category pins */
+.cute-pin.facility .pin-circle,
+.cute-pin.facility .pin-tail{background:#15945f!important}
+.cute-pin.facility .pin-circle{
+ overflow:visible!important;
+ border:3px solid #fff!important;
+}
+.cute-pin.facility svg{
+ width:24px!important;
+ height:24px!important;
+ display:block!important;
+}
+
 </style>
 </head>
 <body>
@@ -507,20 +521,16 @@ const MAP_ART={
 function escAttr(v){
  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 }
-const CATEGORY_PIN_PHOTO={
- attraction:"./fujinomiya-bg.jpg",
- restaurant:"./restaurants-bg.png",
- accommodation:"./accommodations-bg.png"
-};
+function facilityPhotoUrl(item){
+ const list=[item?.image_url,item?.imageUrl,item?.photo_url,item?.photoUrl,item?.photo,item?.image,item?.thumbnail,item?.thumb];
+ for(const x of list){const v=String(x||"").trim();if(v)return v;}
+ return "";
+}
 function mapFacilityIcon(item){
- const photo=CATEGORY_PIN_PHOTO[MAP_PAGE_KIND]||"";
- const inner=photo
-   ? `<img class="pin-photo" src="${escAttr(photo)}" alt="">`
-   : `<div class="pin-fallback">${MAP_ART[MAP_PAGE_KIND]||""}</div>`;
  return L.divIcon({
    className:"",
-   html:`<div class="cute-pin facility ${photo?"has-photo":"no-photo"}"><div class="pin-circle">${inner}</div><div class="pin-tail"></div></div>`,
-   iconSize:[50,62],iconAnchor:[25,60],popupAnchor:[0,-54]
+   html:`<div class="cute-pin facility"><div class="pin-circle">${MAP_ART[MAP_PAGE_KIND]||""}</div><div class="pin-tail"></div></div>`,
+   iconSize:[40,49],iconAnchor:[20,47],popupAnchor:[0,-44]
  });
 }
 function mapClusterIcon(count){
